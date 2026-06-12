@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票行业板块资金净流向分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <h1>股票行业板块资金净流向</h1>
+            <div class="update-time" id="updateTime">数据加载中...</div>
+        </header>
+
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <div class="control-group">
+                <label>板块类型：</label>
+                <select id="sectorType">
+                    <option value="industry">行业板块</option>
+                    <option value="concept">概念板块</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>时间指标：</label>
+                <select id="indicator">
+                    <option value="今日">今日</option>
+                    <option value="5日">5日</option>
+                    <option value="10日">10日</option>
+                    <option value="一周">一周</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>图表类型：</label>
+                <select id="chartType">
+                    <option value="bar">柱状图</option>
+                    <option value="intraday">分时图</option>
+                    <option value="heatmap">热力图</option>
+                    <option value="sankey">桑基图</option>
+                    <option value="barRace">动态排行</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>显示数量：</label>
+                <select id="topN">
+                    <option value="15">前15</option>
+                    <option value="20">前20</option>
+                    <option value="30" selected>前30</option>
+                    <option value="0">全部</option>
+                </select>
+            </div>
+            <button class="btn-refresh" id="btnRefresh">刷新数据</button>
+            <button class="btn-config" id="btnConfig">板块配置</button>
+        </div>
+
+        <!-- 板块配置面板（默认隐藏） -->
+        <div class="config-panel" id="configPanel" style="display:none;">
+            <div class="config-header">
+                <h3>板块配置</h3>
+                <div class="config-actions">
+                    <button class="btn-select-all" id="btnSelectAll">全选</button>
+                    <button class="btn-deselect-all" id="btnDeselectAll">全不选</button>
+                    <button class="btn-preset" id="btnPreset">恢复预设</button>
+                    <button class="btn-close-config" id="btnCloseConfig">关闭</button>
+                </div>
+            </div>
+            <div class="config-search">
+                <input type="text" id="sectorSearch" placeholder="搜索板块名称..." />
+            </div>
+            <div class="config-sectors" id="sectorCheckboxes">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="chart-area">
+            <div id="mainChart" class="chart-container"></div>
+        </div>
+
+        <!-- 汇总信息 -->
+        <div class="summary-panel" id="summaryPanel">
+            <div class="summary-item">
+                <span class="summary-label">净流入板块数</span>
+                <span class="summary-value inflow" id="inflowCount">-</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">净流出板块数</span>
+                <span class="summary-value outflow" id="outflowCount">-</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">最大净流入</span>
+                <span class="summary-value inflow" id="maxInflow">-</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">最大净流出</span>
+                <span class="summary-value outflow" id="maxOutflow">-</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/eastmoney_api.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
