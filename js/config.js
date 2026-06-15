@@ -4,6 +4,16 @@
 const CONFIG = {
     // 数据文件路径
     dataPath: './data/',
+
+    // 东方财富API代理配置
+    // 直连 push2.eastmoney.com 在部分网络环境下会被拦截，通过代理中转解决
+    // 代理格式: 代理地址/proxy?target=encodeURIComponent(原始URL)
+    // 设为 null 则直连东方财富API
+    apiProxy: 'https://1429314495-dxb6k8oy7q.ap-beijing.tencentscf.com',
+
+    // 备用代理（主代理失败时自动切换）
+    apiProxyBackup: 'https://vercel-proxy-p.vercel.app',
+
     // 默认配置
     defaults: {
         sectorType: 'industry',

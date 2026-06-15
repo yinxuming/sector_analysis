@@ -27,12 +27,84 @@ const EastMoneyAPI = {
     _jsonpCounter: 0,
 
     /**
+     * 构建代理URL（如果配置了代理）
+     * 代理格式: 代理地址/proxy?target=encodeURIComponent(原始URL)
+     * @param {string} originalUrl - 原始东方财富API URL
+     * @param {string} proxyBase - 代理服务器地址
+     * @returns {string} 经过代理转换的URL
+     */
+    _proxyUrl(originalUrl, proxyBase) {
+        const proxy = proxyBase || CONFIG.apiProxy;
+        if (proxy) {
+            return `${proxy}/proxy?target=${encodeURIComponent(originalUrl)}`;
+        }
+        return originalUrl;
+    },
+
+    /**
      * JSONP请求封装
+     * 支持通过代理中转请求，解决直连东方财富API被拦截的问题
+     * 主代理失败自动切换备用代理，最后尝试直连
      * @param {string} url - 请求URL（不含callback参数）
      * @param {number} timeout - 超时时间(ms)
      * @returns {Promise<object>} 响应数据
      */
     _jsonp(url, timeout = 10000) {
+        // 通过代理时使用fetch+JSON解析，因为代理返回的是JSON而非JSONP
+        if (CONFIG.apiProxy) {
+            return this._fetchJson(url, timeout);
+        }
+
+        // 直连模式：使用传统JSONP
+        return this._jsonpDirect(url, timeout);
+    },
+
+    /**
+     * 通过代理的fetch请求（主备自动切换）
+     * 尝试顺序: 主代理 → 备用代理 → 直连
+     * @param {string} url - 原始东方财富API URL
+     * @param {number} timeout - 超时时间(ms)
+     * @returns {Promise<object>} 响应数据
+     */
+    async _fetchJson(url, timeout = 15000) {
+        const proxies = [CONFIG.apiProxy, CONFIG.apiProxyBackup].filter(Boolean);
+        let lastErr = null;
+
+        for (const proxy of proxies) {
+            try {
+                const proxyUrl = this._proxyUrl(url, proxy);
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), timeout);
+
+                const resp = await fetch(proxyUrl, { signal: controller.signal });
+                clearTimeout(timer);
+
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                console.log(`代理请求成功: ${proxy}`);
+                return data;
+            } catch (err) {
+                console.warn(`代理请求失败 ${proxy}: ${err.message}`);
+                lastErr = err;
+            }
+        }
+
+        // 所有代理都失败，尝试直连
+        console.warn('所有代理均失败，尝试直连东方财富API');
+        try {
+            return await this._jsonpDirect(url, timeout);
+        } catch (err) {
+            throw lastErr || err;
+        }
+    },
+
+    /**
+     * 传统JSONP直连请求
+     * @param {string} url - 请求URL（不含callback参数）
+     * @param {number} timeout - 超时时间(ms)
+     * @returns {Promise<object>} 响应数据
+     */
+    _jsonpDirect(url, timeout = 10000) {
         return new Promise((resolve, reject) => {
             const callbackName = `em_callback_${++this._jsonpCounter}_${Date.now()}`;
             const script = document.createElement('script');
@@ -76,7 +148,7 @@ const EastMoneyAPI = {
      */
     async fetchSectorList(sectorType = 'industry') {
         const fs = this.SECTOR_FS_MAP[sectorType] || this.SECTOR_FS_MAP.industry;
-        const url = `https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=500&po=1&np=1&fltt=2&invt=2&fid=f62&fs=${fs}&fields=f12,f14,f2,f3,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87&ut=fa5fd1943c7b386f172d6893dbfba10b`;
+        const url = `https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=500&po=1&np=1&fltt=2&invt=2&fid=f62&fs=${fs}&fields=f12,f14,f2,f3,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87`;
 
         try {
             const resp = await this._jsonp(url);
@@ -129,7 +201,7 @@ const EastMoneyAPI = {
      */
     async fetchSectorFlowMinute(sectorCode, limit = 240) {
         const secid = `90.${sectorCode}`;
-        const url = `https://push2.eastmoney.com/api/qt/stock/fflow/kline/get?fields1=f1,f2,f3,f4,f5&fields2=f51,f52,f53,f54,f55,f56,f57&secid=${secid}&klt=1&lmt=${limit}&ut=fa5fd1943c7b386f172d6893dbfba10b`;
+        const url = `https://push2.eastmoney.com/api/qt/stock/fflow/kline/get?fields1=f1,f2,f3,f4,f5&fields2=f51,f52,f53,f54,f55,f56,f57&secid=${secid}&klt=1&lmt=${limit}`;
 
         try {
             const resp = await this._jsonp(url);
