@@ -29,8 +29,18 @@
             loadData();
         });
         document.getElementById('indicator').addEventListener('change', loadData);
-        document.getElementById('chartType').addEventListener('change', loadData);
+        document.getElementById('chartType').addEventListener('change', function() {
+            // 分时图模式下显示日期选择器，其他模式隐藏
+            const dateGroup = document.getElementById('dateGroup');
+            dateGroup.style.display = this.value === 'intraday' ? '' : 'none';
+            // 切换到分时图时，默认日期为今天
+            if (this.value === 'intraday' && !document.getElementById('intradayDate').value) {
+                document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
+            }
+            loadData();
+        });
         document.getElementById('topN').addEventListener('change', loadData);
+        document.getElementById('intradayDate').addEventListener('change', loadData);
         document.getElementById('btnRefresh').addEventListener('click', loadData);
 
         // 板块配置面板
@@ -242,34 +252,42 @@
 
     /**
      * 加载分时折线图数据
-     * 优先使用东方财富API获取分钟级资金流数据，fallback到本地JSON
+     * 今天：优先东方财富API（实时分钟级），fallback本地JSON
+     * 历史日期：仅本地JSON（由GitHub Actions收盘后采集保存）
      */
     async function loadIntradayData(chartDom, sectorType) {
         let data = null;
+        const selectedDate = document.getElementById('intradayDate').value || new Date().toISOString().slice(0, 10);
+        const today = new Date().toISOString().slice(0, 10);
+        const isToday = selectedDate === today;
 
-        // 优先尝试东方财富API（分钟级数据，无需后端采集）
-        try {
-            const topN = parseInt(document.getElementById('topN').value) || 30;
-            data = await EastMoneyAPI.buildIntradayData(sectorType, topN);
-            if (data) {
-                console.log('分时图数据来源: 东方财富API');
+        // 今天的数据：优先尝试东方财富API（实时分钟级数据）
+        if (isToday) {
+            try {
+                const topN = parseInt(document.getElementById('topN').value) || 30;
+                data = await EastMoneyAPI.buildIntradayData(sectorType, topN);
+                if (data) {
+                    console.log('分时图数据来源: 东方财富API');
+                }
+            } catch (err) {
+                console.warn('东方财富API获取分时数据失败，尝试本地JSON:', err);
             }
-        } catch (err) {
-            console.warn('东方财富API获取分时数据失败，尝试本地JSON:', err);
         }
 
-        // Fallback: 本地JSON数据
+        // Fallback: 本地JSON数据（今天或历史日期）
         if (!data) {
             try {
-                const today = new Date().toISOString().slice(0, 10);
-                const filename = `intraday_${sectorType}_${today}.json`;
+                const filename = `intraday_${sectorType}_${selectedDate}.json`;
                 data = await fetchJSON(CONFIG.dataPath + filename);
-                console.log('分时图数据来源: 本地JSON');
+                console.log(`分时图数据来源: 本地JSON (${selectedDate})`);
             } catch (err) {
+                const hint = isToday
+                    ? '东方财富API和本地数据均不可用'
+                    : `${selectedDate} 无本地分时数据（仅保留近期数据）`;
                 chartDom.innerHTML = '<div style="text-align:center;padding:100px;color:#8b949e;">' +
                     '<h2>暂无分时数据</h2>' +
-                    '<p>东方财富API和本地数据均不可用</p>' +
-                    '<p style="font-size:12px;margin-top:10px;">请检查网络连接或运行 python main.py intraday</p></div>';
+                    `<p>${hint}</p>` +
+                    '<p style="font-size:12px;margin-top:10px;">历史分时数据由每日收盘后自动采集</p></div>';
                 return;
             }
         }
