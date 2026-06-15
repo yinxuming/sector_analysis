@@ -30,11 +30,12 @@
         });
         document.getElementById('indicator').addEventListener('change', loadData);
         document.getElementById('chartType').addEventListener('change', function() {
-            // 分时图模式下显示日期选择器，其他模式隐藏
-            const dateGroup = document.getElementById('dateGroup');
-            dateGroup.style.display = this.value === 'intraday' ? '' : 'none';
+            // 分时图模式下显示日期选择器和获取完整分时按钮，其他模式隐藏
+            const isIntraday = this.value === 'intraday';
+            document.getElementById('dateGroup').style.display = isIntraday ? '' : 'none';
+            document.getElementById('intradayFullGroup').style.display = isIntraday ? '' : 'none';
             // 切换到分时图时，默认日期为今天
-            if (this.value === 'intraday' && !document.getElementById('intradayDate').value) {
+            if (isIntraday && !document.getElementById('intradayDate').value) {
                 document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
             }
             loadData();
@@ -42,6 +43,9 @@
         document.getElementById('topN').addEventListener('change', loadData);
         document.getElementById('intradayDate').addEventListener('change', loadData);
         document.getElementById('btnRefresh').addEventListener('click', loadData);
+
+        // 获取完整分时数据按钮
+        document.getElementById('btnIntradayFull').addEventListener('click', handleIntradayFull);
 
         // 板块配置面板
         document.getElementById('btnConfig').addEventListener('click', toggleConfigPanel);
@@ -58,6 +62,51 @@
             selectPresetSectors();
         });
         document.getElementById('sectorSearch').addEventListener('input', filterSectors);
+    }
+
+    /**
+     * 处理「获取完整分时数据」按钮点击
+     * 调用后端API从东方财富获取全天240个分钟级采样点
+     */
+    async function handleIntradayFull() {
+        const btn = document.getElementById('btnIntradayFull');
+        const originalText = btn.textContent;
+
+        // 按钮状态：禁用+加载中
+        btn.disabled = true;
+        btn.textContent = '获取中...';
+
+        try {
+            const resp = await fetch('/api/intraday-full');
+            const result = await resp.json();
+
+            if (result.success) {
+                btn.textContent = '获取成功';
+                btn.classList.add('success');
+                // 自动切换到今天的分时数据并刷新图表
+                document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
+                loadData();
+                // 3秒后恢复按钮
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    btn.classList.remove('success');
+                }, 3000);
+            } else {
+                btn.textContent = '获取失败';
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }, 2000);
+            }
+        } catch (err) {
+            console.error('获取完整分时数据失败:', err);
+            btn.textContent = '请求失败（需本地服务支持）';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }, 2000);
+        }
     }
 
     /**
