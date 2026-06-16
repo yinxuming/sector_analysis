@@ -92,8 +92,9 @@
 
                 if (!result || !result.success) {
                     const sectorType = document.getElementById('sectorType').value;
-                    const topN = parseInt(document.getElementById('topN').value) || 30;
-                    const data = await EastMoneyAPI.buildIntradayData(sectorType, topN);
+                    const topN = getTopNValue() === -1 ? 500 : (getTopNValue() || 30);
+                    const selectedNames = getFilterParam();
+                    const data = await EastMoneyAPI.buildIntradayData(sectorType, topN, selectedNames);
                     result = data ? { success: true } : { success: false, message: '东方财富API获取失败' };
                 }
 
@@ -195,6 +196,8 @@
                 } else {
                     label.classList.remove('selected');
                 }
+                // 勾选变化实时保存到localStorage
+                saveSectorSelection();
             });
             container.appendChild(label);
         });
@@ -241,9 +244,9 @@
     }
 
     /**
-     * 应用板块选择（保存到localStorage并更新selectedSectors）
+     * 保存板块选择到localStorage（实时保存）
      */
-    function applySectorSelection() {
+    function saveSectorSelection() {
         const sectorType = document.getElementById('sectorType').value;
         const typeKey = sectorType === 'industry' ? 'industry' : 'concept';
 
@@ -260,9 +263,24 @@
     }
 
     /**
-     * 获取当前选中的板块列表
+     * 应用板块选择（关闭配置面板时调用）
      */
-    function getSelectedSectors() {
+    function applySectorSelection() {
+        saveSectorSelection();
+    }
+
+    /**
+     * 获取topN值（数字），如果是"已选择板块"返回-1
+     */
+    function getTopNValue() {
+        const val = document.getElementById('topN').value;
+        return val === 'selected' ? -1 : parseInt(val) || 30;
+    }
+
+    /**
+     * 获取当前选中的板块名称列表
+     */
+    function getSelectedSectorNames() {
         const sectorType = document.getElementById('sectorType').value;
         const typeKey = sectorType === 'industry' ? 'industry' : 'concept';
         const storageKey = `selectedSectors_${typeKey}`;
@@ -271,6 +289,13 @@
             try { return JSON.parse(saved); } catch(e) { return null; }
         }
         return null;
+    }
+
+    /**
+     * 获取过滤参数：topN为"已选择板块"时返回selectedNames，否则返回null
+     */
+    function getFilterParam() {
+        return getTopNValue() === -1 ? getSelectedSectorNames() : null;
     }
 
     /**
@@ -312,13 +337,24 @@
 
     /**
      * 根据板块配置过滤数据
+     * topN="已选择板块"时只保留已选板块；topN为数字时截取前N个
      */
     function filterDataBySectors(data) {
-        const selected = getSelectedSectors();
-        if (!selected || selected.length === 0) return data;
-
+        const topN = getTopNValue();
         const filtered = { ...data };
-        filtered.sectors = data.sectors.filter(s => selected.includes(s.name));
+
+        if (topN === -1) {
+            // 已选择板块模式
+            const selected = getSelectedSectorNames();
+            if (selected && selected.length > 0) {
+                filtered.sectors = data.sectors.filter(s => selected.includes(s.name));
+            }
+        } else if (topN > 0) {
+            // 前N个模式
+            filtered.sectors = data.sectors.slice(0, topN);
+        }
+        // topN===0 为全部，不过滤
+
         return filtered;
     }
 
@@ -336,8 +372,9 @@
         // 今天的数据：优先尝试东方财富API（实时分钟级数据）
         if (isToday) {
             try {
-                const topN = parseInt(document.getElementById('topN').value) || 30;
-                data = await EastMoneyAPI.buildIntradayData(sectorType, topN);
+                const topN = getTopNValue() === -1 ? 500 : (getTopNValue() || 30);
+                const selectedNames = getFilterParam();
+                data = await EastMoneyAPI.buildIntradayData(sectorType, topN, selectedNames);
                 if (data) {
                     console.log('分时图数据来源: 东方财富API');
                 }
@@ -389,7 +426,8 @@
         // 今日数据优先使用东方财富API
         if (indicator === '今日') {
             try {
-                data = await EastMoneyAPI.buildRealtimeData(sectorType);
+                const selectedNames = getFilterParam();
+                data = await EastMoneyAPI.buildRealtimeData(sectorType, selectedNames);
                 if (data) {
                     console.log('实时数据来源: 东方财富API');
                 }

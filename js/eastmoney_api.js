@@ -1,11 +1,11 @@
 /**
  * 东方财富API数据源模块
- * 通过JSONP方式调用东方财富公开接口，获取板块分时资金流数据
- * 解决GitHub Pages部署时无法后端采集分时数据的问题
+ * 通过代理或直连方式调用东方财富公开接口，获取板块分时资金流数据
  *
  * 接口说明：
- * - 板块列表：push2.eastmoney.com/api/qt/clist/get (fs=m:90+t:2 行业, fs=m:90+t:3 概念)
- * - 分时资金流：push2.eastmoney.com/api/qt/stock/fflow/kline/get (secid=90.BKxxxx, klt=1)
+ * - 使用 push2delay.eastmoney.com（有CORS头，支持直连；push2.eastmoney.com 服务器端请求会被拒绝）
+ * - 板块列表：push2delay.eastmoney.com/api/qt/clist/get (fs=m:90+t:2 行业, fs=m:90+t:3 概念)
+ * - 分时资金流：push2delay.eastmoney.com/api/qt/stock/fflow/kline/get (secid=90.BKxxxx, klt=1)
  * - 分时价格：push2his.eastmoney.com/api/qt/stock/trends2/get (secid=90.BKxxxx)
  */
 
@@ -165,7 +165,7 @@ const EastMoneyAPI = {
             // 分页获取全部板块
             // 精简fields避免代理URL过长（代理对query string有长度限制，完整fields会502）
             while (true) {
-                const url = `https://push2.eastmoney.com/api/qt/clist/get?pn=${page}&pz=${pageSize}&po=1&np=1&fltt=2&invt=2&fid=f62&fs=${fs}&fields=f12,f14,f3,f62`;
+                const url = `https://push2delay.eastmoney.com/api/qt/clist/get?pn=${page}&pz=${pageSize}&po=1&np=1&fltt=2&invt=2&fid=f62&fs=${fs}&fields=f12,f14,f3,f62`;
                 const resp = await this._jsonp(url);
 
                 if (!resp || !resp.data || !resp.data.diff || resp.data.diff.length === 0) {
@@ -213,7 +213,7 @@ const EastMoneyAPI = {
      */
     async fetchSectorFlowMinute(sectorCode, limit = 240) {
         const secid = `90.${sectorCode}`;
-        const url = `https://push2.eastmoney.com/api/qt/stock/fflow/kline/get?fields1=f1,f2,f3,f4,f5&fields2=f51,f52,f53,f54,f55,f56,f57&secid=${secid}&klt=1&lmt=${limit}`;
+        const url = `https://push2delay.eastmoney.com/api/qt/stock/fflow/kline/get?fields1=f1,f2,f3,f4,f5&fields2=f51,f52,f53,f54,f55,f56,f57&secid=${secid}&klt=1&lmt=${limit}`;
 
         try {
             const resp = await this._jsonp(url);
@@ -299,13 +299,18 @@ const EastMoneyAPI = {
      * @param {number} topN - 取前N个板块
      * @returns {Promise<Object>} 分时图数据
      */
-    async buildIntradayData(sectorType = 'industry', topN = 30) {
+    async buildIntradayData(sectorType = 'industry', topN = 30, selectedNames = null) {
         // 1. 获取板块列表（含代码映射和当日资金流排名）
         const sectors = await this.fetchSectorList(sectorType);
         if (sectors.length === 0) return null;
 
-        // 按主力净流入绝对值排序取topN
-        const displaySectors = sectors.slice(0, topN);
+        // 按已选板块名称过滤，或按topN截取
+        let displaySectors;
+        if (selectedNames && selectedNames.length > 0) {
+            displaySectors = sectors.filter(s => selectedNames.includes(s.name));
+        } else {
+            displaySectors = sectors.slice(0, topN);
+        }
 
         // 2. 批量获取分时资金流
         const codes = displaySectors.map(s => s.code);
@@ -368,9 +373,14 @@ const EastMoneyAPI = {
      * @param {string} sectorType - 板块类型
      * @returns {Promise<Object>} 实时排名数据
      */
-    async buildRealtimeData(sectorType = 'industry') {
+    async buildRealtimeData(sectorType = 'industry', selectedNames = null) {
         const sectors = await this.fetchSectorList(sectorType);
         if (sectors.length === 0) return null;
+
+        // 按已选板块名称过滤
+        const displaySectors = selectedNames && selectedNames.length > 0
+            ? sectors.filter(s => selectedNames.includes(s.name))
+            : sectors;
 
         const today = new Date();
 
@@ -378,7 +388,7 @@ const EastMoneyAPI = {
             update_time: today.toLocaleString('zh-CN'),
             indicator: '今日',
             sector_type: sectorType === 'industry' ? '行业资金流' : '概念资金流',
-            sectors: sectors.map(s => ({
+            sectors: displaySectors.map(s => ({
                 name: s.name,
                 main_net_inflow_yi: s.mainNetInflowYi,
                 change_pct: s.changePct
