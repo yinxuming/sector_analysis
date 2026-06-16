@@ -150,50 +150,64 @@ const EastMoneyAPI = {
 
     /**
      * 获取板块列表（含代码映射）
+     * 东方财富API每次最多返回100条，需要分页获取全部板块
      * @param {string} sectorType - 板块类型 industry/concept
      * @returns {Promise<Array>} 板块列表 [{code, name, mainNetInflow, changePct, ...}]
      */
     async fetchSectorList(sectorType = 'industry') {
         const fs = this.SECTOR_FS_MAP[sectorType] || this.SECTOR_FS_MAP.industry;
-        const url = `https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=500&po=1&np=1&fltt=2&invt=2&fid=f62&fs=${fs}&fields=f12,f14,f2,f3,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87`;
+        const allSectors = [];
+        const codeMap = {};
+        let page = 1;
+        const pageSize = 100;  // API每次最多返回100条
 
         try {
-            const resp = await this._jsonp(url);
-            if (!resp || !resp.data || !resp.data.diff) {
-                console.warn('东方财富板块列表返回为空');
-                return [];
+            // 分页获取全部板块
+            while (true) {
+                const url = `https://push2.eastmoney.com/api/qt/clist/get?pn=${page}&pz=${pageSize}&po=1&np=1&fltt=2&invt=2&fid=f62&fs=${fs}&fields=f12,f14,f2,f3,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87`;
+                const resp = await this._jsonp(url);
+
+                if (!resp || !resp.data || !resp.data.diff || resp.data.diff.length === 0) {
+                    break;
+                }
+
+                const items = resp.data.diff;
+                for (const item of items) {
+                    const name = item.f14;
+                    const code = item.f12;
+                    codeMap[name] = code;
+
+                    allSectors.push({
+                        code: code,
+                        name: name,
+                        price: item.f2,
+                        changePct: item.f3,
+                        mainNetInflow: item.f62,
+                        mainNetInflowYi: +(item.f62 / 1e8).toFixed(2),
+                        hugeNetInflow: item.f66,
+                        hugeNetInflowPct: item.f69,
+                        bigNetInflow: item.f72,
+                        bigNetInflowPct: item.f75,
+                        mediumNetInflow: item.f78,
+                        mediumNetInflowPct: item.f81,
+                        smallNetInflow: item.f84,
+                        smallNetInflowPct: item.f87,
+                        mainNetInflowPct: item.f184
+                    });
+                }
+
+                // 已获取全部数据则退出
+                const total = resp.data.total || 0;
+                if (allSectors.length >= total || items.length < pageSize) {
+                    break;
+                }
+                page++;
             }
-
-            // 构建名称到代码的映射缓存
-            const codeMap = {};
-            const sectors = resp.data.diff.map(item => {
-                const name = item.f14;  // 板块名称
-                const code = item.f12;  // 板块代码（如BK0478）
-                codeMap[name] = code;
-
-                return {
-                    code: code,
-                    name: name,
-                    price: item.f2,          // 指数点位
-                    changePct: item.f3,      // 涨跌幅%
-                    mainNetInflow: item.f62, // 主力净流入（元）
-                    mainNetInflowYi: +(item.f62 / 1e8).toFixed(2), // 亿元
-                    hugeNetInflow: item.f66, // 超大单净流入
-                    hugeNetInflowPct: item.f69,
-                    bigNetInflow: item.f72,  // 大单净流入
-                    bigNetInflowPct: item.f75,
-                    mediumNetInflow: item.f78, // 中单净流入
-                    mediumNetInflowPct: item.f81,
-                    smallNetInflow: item.f84,  // 小单净流入
-                    smallNetInflowPct: item.f87,
-                    mainNetInflowPct: item.f184  // 主力净流入占比
-                };
-            });
 
             // 缓存映射
             this._sectorCodeMap[sectorType] = codeMap;
-
-            return sectors;
+            console.log(`获取板块列表: ${allSectors.length}个 (${sectorType})`);
+            return allSectors;
         } catch (err) {
             console.error('获取板块列表失败:', err);
             return [];
