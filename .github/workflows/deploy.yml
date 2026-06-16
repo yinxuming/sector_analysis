@@ -1,58 +1,38 @@
-name: Deploy to Public Repo
+# 此文件需要复制到公开仓库的 .github/workflows/deploy.yml
+# 用于将公开仓库内容部署到 GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'web/**'
-      - '.github/workflows/deploy-public.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: deploy-public
+  group: pages
   cancel-in-progress: false
 
 jobs:
-  push-to-public:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
 
-      - name: Push web directory to public repo
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
-          PUBLIC_REPO_URL="https://x-access-token:${{ secrets.PUBLIC_REPO_PAT }}@github.com/${{ secrets.PUBLIC_REPO_OWNER }}/${{ secrets.PUBLIC_REPO_NAME }}.git"
-          CLONE_DIR=$(mktemp -d)
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
 
-          git clone --branch main --depth 1 "$PUBLIC_REPO_URL" "$CLONE_DIR"
-
-          # 保留公开仓库的 .github 目录（含deploy workflow）
-          find "$CLONE_DIR" -mindepth 1 -maxdepth 1 \
-            ! -name '.git' \
-            ! -name '.github' \
-            -exec rm -rf {} +
-
-          # 复制web目录内容到公开仓库根目录
-          cp -a web/. "$CLONE_DIR/"
-
-          cd "$CLONE_DIR"
-          git add -A
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "deploy: update sector data from ${{ github.sha }}"
-            git push origin main
-          fi
-
-      - name: Trigger public repo deploy
-        run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.PUBLIC_REPO_PAT }}" \
-            "https://api.github.com/repos/${{ secrets.PUBLIC_REPO_OWNER }}/${{ secrets.PUBLIC_REPO_NAME }}/actions/workflows/deploy.yml/dispatches" \
-            -d '{"ref":"main"}'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
