@@ -1,81 +1,21 @@
 {
-  "update_time": "2026-06-15 13:57:12",
+  "update_time": "2026-06-16 02:24:55",
   "indicator": "今日",
   "sector_type": "行业资金流",
   "sectors": [
     {
-      "name": "电子",
-      "main_net_inflow_yi": 363.36,
+      "name": "电力设备",
+      "main_net_inflow_yi": 36.18,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 5.99
+      "change_pct": 1.51
     },
     {
-      "name": "半导体",
-      "main_net_inflow_yi": 163.43,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 6.06
-    },
-    {
-      "name": "通信",
-      "main_net_inflow_yi": 152.59,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 4.18
-    },
-    {
-      "name": "通信设备",
-      "main_net_inflow_yi": 147.03,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 4.88
-    },
-    {
-      "name": "通信网络设备及器件",
-      "main_net_inflow_yi": 129.54,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 6.76
-    },
-    {
-      "name": "元件",
-      "main_net_inflow_yi": 120.85,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 8.86
-    },
-    {
-      "name": "印制电路板",
-      "main_net_inflow_yi": 97.77,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 8.55
-    },
-    {
-      "name": "数字芯片设计",
-      "main_net_inflow_yi": 70.45,
+      "name": "稀土",
+      "main_net_inflow_yi": 23.14,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
@@ -84,608 +24,178 @@
       "change_pct": 6.28
     },
     {
-      "name": "消费电子零部件及组装",
-      "main_net_inflow_yi": 47.89,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 5.26
-    },
-    {
-      "name": "消费电子",
-      "main_net_inflow_yi": 47.31,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 4.8
-    },
-    {
-      "name": "电力设备",
-      "main_net_inflow_yi": 38.84,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.59
-    },
-    {
-      "name": "有色金属",
-      "main_net_inflow_yi": 38.13,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 3.85
-    },
-    {
-      "name": "非银金融",
-      "main_net_inflow_yi": 31.48,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.96
-    },
-    {
-      "name": "玻璃玻纤",
-      "main_net_inflow_yi": 28.6,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 6.59
-    },
-    {
       "name": "小金属",
-      "main_net_inflow_yi": 27.32,
+      "main_net_inflow_yi": 22.04,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 5.36
-    },
-    {
-      "name": "建筑材料",
-      "main_net_inflow_yi": 26.26,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 1.53
-    },
-    {
-      "name": "电网设备",
-      "main_net_inflow_yi": 24.45,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.63
-    },
-    {
-      "name": "玻纤制造",
-      "main_net_inflow_yi": 23.86,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 8.81
-    },
-    {
-      "name": "被动元件",
-      "main_net_inflow_yi": 23.08,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 9.63
-    },
-    {
-      "name": "计算机",
-      "main_net_inflow_yi": 21.27,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.4
-    },
-    {
-      "name": "光学光电子",
-      "main_net_inflow_yi": 20.54,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 4.82
-    },
-    {
-      "name": "半导体设备",
-      "main_net_inflow_yi": 20.22,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 4.57
-    },
-    {
-      "name": "塑料",
-      "main_net_inflow_yi": 19.49,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 4.02
-    },
-    {
-      "name": "基础化工",
-      "main_net_inflow_yi": 18.68,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.07
-    },
-    {
-      "name": "证券Ⅲ",
-      "main_net_inflow_yi": 18.04,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.93
-    },
-    {
-      "name": "证券Ⅱ",
-      "main_net_inflow_yi": 18.04,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.93
-    },
-    {
-      "name": "机械设备",
-      "main_net_inflow_yi": 18.01,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.82
-    },
-    {
-      "name": "模拟芯片设计",
-      "main_net_inflow_yi": 17.19,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 5.78
-    },
-    {
-      "name": "分立器件",
-      "main_net_inflow_yi": 16.32,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 8.83
-    },
-    {
-      "name": "计算机设备",
-      "main_net_inflow_yi": 16.0,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.78
-    },
-    {
-      "name": "输变电设备",
-      "main_net_inflow_yi": 15.79,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 4.03
-    },
-    {
-      "name": "钨",
-      "main_net_inflow_yi": 15.72,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 9.34
-    },
-    {
-      "name": "集成电路封测",
-      "main_net_inflow_yi": 15.53,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 6.55
-    },
-    {
-      "name": "其他计算机设备",
-      "main_net_inflow_yi": 15.33,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.74
-    },
-    {
-      "name": "其他小金属",
-      "main_net_inflow_yi": 15.1,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 4.12
-    },
-    {
-      "name": "光学元件",
-      "main_net_inflow_yi": 14.74,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 5.31
-    },
-    {
-      "name": "银行",
-      "main_net_inflow_yi": 14.45,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": -1.08
-    },
-    {
-      "name": "银行Ⅱ",
-      "main_net_inflow_yi": 14.45,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": -1.08
-    },
-    {
-      "name": "锂电池",
-      "main_net_inflow_yi": 14.42,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 3.85
-    },
-    {
-      "name": "其他电源设备Ⅱ",
-      "main_net_inflow_yi": 14.23,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 3.67
-    },
-    {
-      "name": "自动化设备",
-      "main_net_inflow_yi": 14.13,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 4.6
-    },
-    {
-      "name": "半导体材料",
-      "main_net_inflow_yi": 13.23,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 5.15
-    },
-    {
-      "name": "其他电源设备Ⅲ",
-      "main_net_inflow_yi": 13.08,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 4.0
-    },
-    {
-      "name": "军工电子Ⅲ",
-      "main_net_inflow_yi": 12.9,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.74
-    },
-    {
-      "name": "军工电子Ⅱ",
-      "main_net_inflow_yi": 12.9,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.74
-    },
-    {
-      "name": "电池",
-      "main_net_inflow_yi": 12.38,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 3.27
-    },
-    {
-      "name": "电力",
-      "main_net_inflow_yi": 12.02,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 1.22
-    },
-    {
-      "name": "公用事业",
-      "main_net_inflow_yi": 11.44,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 0.93
-    },
-    {
-      "name": "膜材料",
-      "main_net_inflow_yi": 11.35,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 6.48
-    },
-    {
-      "name": "保险Ⅲ",
-      "main_net_inflow_yi": 11.07,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 1.69
-    },
-    {
-      "name": "保险Ⅱ",
-      "main_net_inflow_yi": 11.07,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 1.69
-    },
-    {
-      "name": "集成电路制造",
-      "main_net_inflow_yi": 10.49,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 6.74
-    },
-    {
-      "name": "其他电子Ⅲ",
-      "main_net_inflow_yi": 9.87,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 5.8
-    },
-    {
-      "name": "其他电子Ⅱ",
-      "main_net_inflow_yi": 9.87,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 5.8
-    },
-    {
-      "name": "LED",
-      "main_net_inflow_yi": 9.27,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 5.02
+      "change_pct": 3.36
     },
     {
       "name": "通信线缆及配套",
-      "main_net_inflow_yi": 9.09,
+      "main_net_inflow_yi": 20.31,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 5.36
+      "change_pct": 5.85
     },
     {
-      "name": "贵金属",
-      "main_net_inflow_yi": 9.07,
+      "name": "通信设备",
+      "main_net_inflow_yi": 15.24,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 5.94
+      "change_pct": 1.8
     },
     {
-      "name": "汽车零部件",
-      "main_net_inflow_yi": 8.96,
+      "name": "金属新材料",
+      "main_net_inflow_yi": 13.65,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 2.36
+      "change_pct": 3.03
     },
     {
-      "name": "铜",
-      "main_net_inflow_yi": 8.52,
+      "name": "通信",
+      "main_net_inflow_yi": 10.92,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 5.84
+      "change_pct": 1.05
     },
     {
-      "name": "股份制银行Ⅲ",
-      "main_net_inflow_yi": 8.11,
+      "name": "电池",
+      "main_net_inflow_yi": 10.59,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": -0.98
+      "change_pct": 2.14
     },
     {
-      "name": "农化制品",
-      "main_net_inflow_yi": 7.4,
+      "name": "光伏设备",
+      "main_net_inflow_yi": 10.51,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 0.88
+      "change_pct": 1.37
     },
     {
-      "name": "黄金",
-      "main_net_inflow_yi": 7.02,
+      "name": "电网设备",
+      "main_net_inflow_yi": 10.43,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 5.61
+      "change_pct": 1.52
     },
     {
-      "name": "通信终端及配件",
-      "main_net_inflow_yi": 6.77,
+      "name": "磁性材料",
+      "main_net_inflow_yi": 10.33,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 3.22
+      "change_pct": 4.04
     },
     {
-      "name": "激光设备",
+      "name": "输变电设备",
+      "main_net_inflow_yi": 9.0,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 2.89
+    },
+    {
+      "name": "数字芯片设计",
+      "main_net_inflow_yi": 8.42,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.32
+    },
+    {
+      "name": "机械设备",
+      "main_net_inflow_yi": 7.95,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.3
+    },
+    {
+      "name": "电池化学品",
+      "main_net_inflow_yi": 7.5,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 2.14
+    },
+    {
+      "name": "逆变器",
+      "main_net_inflow_yi": 7.2,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 3.38
+    },
+    {
+      "name": "其他电源设备Ⅲ",
+      "main_net_inflow_yi": 7.17,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 2.79
+    },
+    {
+      "name": "自动化设备",
+      "main_net_inflow_yi": 6.83,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.23
+    },
+    {
+      "name": "面板",
+      "main_net_inflow_yi": 6.82,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.78
+    },
+    {
+      "name": "其他电源设备Ⅱ",
       "main_net_inflow_yi": 6.73,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 10.48
-    },
-    {
-      "name": "建筑装饰",
-      "main_net_inflow_yi": 6.24,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 0.97
-    },
-    {
-      "name": "火力发电",
-      "main_net_inflow_yi": 6.18,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 1.92
-    },
-    {
-      "name": "专业工程",
-      "main_net_inflow_yi": 6.1,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 1.88
-    },
-    {
-      "name": "底盘与发动机系统",
-      "main_net_inflow_yi": 5.78,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.31
-    },
-    {
-      "name": "通信服务",
-      "main_net_inflow_yi": 5.57,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
@@ -694,268 +204,58 @@
       "change_pct": 2.58
     },
     {
-      "name": "通信应用增值服务",
-      "main_net_inflow_yi": 5.2,
+      "name": "光学光电子",
+      "main_net_inflow_yi": 6.09,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 4.31
-    },
-    {
-      "name": "汽车",
-      "main_net_inflow_yi": 5.13,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.18
-    },
-    {
-      "name": "玻璃制造",
-      "main_net_inflow_yi": 4.74,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 4.62
-    },
-    {
-      "name": "航运港口",
-      "main_net_inflow_yi": 4.66,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 3.5
-    },
-    {
-      "name": "机器人",
-      "main_net_inflow_yi": 4.63,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 3.64
-    },
-    {
-      "name": "合成树脂",
-      "main_net_inflow_yi": 4.37,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.35
-    },
-    {
-      "name": "航运",
-      "main_net_inflow_yi": 4.19,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 5.18
+      "change_pct": 1.61
     },
     {
       "name": "专用设备",
-      "main_net_inflow_yi": 4.16,
+      "main_net_inflow_yi": 5.86,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 2.09
+      "change_pct": -0.16
     },
     {
-      "name": "交通运输",
-      "main_net_inflow_yi": 3.83,
+      "name": "半导体材料",
+      "main_net_inflow_yi": 4.67,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 1.18
+      "change_pct": 1.24
     },
     {
-      "name": "电网自动化设备",
-      "main_net_inflow_yi": 3.79,
+      "name": "激光设备",
+      "main_net_inflow_yi": 4.59,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 1.82
+      "change_pct": 2.15
     },
     {
-      "name": "航海装备Ⅲ",
-      "main_net_inflow_yi": 3.77,
+      "name": "分立器件",
+      "main_net_inflow_yi": 4.21,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 2.8
+      "change_pct": 2.48
     },
     {
-      "name": "航海装备Ⅱ",
-      "main_net_inflow_yi": 3.77,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.8
-    },
-    {
-      "name": "车身附件及饰件",
-      "main_net_inflow_yi": 3.62,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.24
-    },
-    {
-      "name": "制冷空调设备",
-      "main_net_inflow_yi": 3.58,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 3.1
-    },
-    {
-      "name": "镍",
-      "main_net_inflow_yi": 3.49,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 4.44
-    },
-    {
-      "name": "线缆部件及其他",
-      "main_net_inflow_yi": 3.44,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.28
-    },
-    {
-      "name": "改性塑料",
-      "main_net_inflow_yi": 3.39,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 3.74
-    },
-    {
-      "name": "其他专业工程",
-      "main_net_inflow_yi": 3.21,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.07
-    },
-    {
-      "name": "国有大型银行Ⅲ",
-      "main_net_inflow_yi": 3.18,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": -2.24
-    },
-    {
-      "name": "软件开发",
-      "main_net_inflow_yi": 3.0,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 1.96
-    },
-    {
-      "name": "城商行Ⅲ",
-      "main_net_inflow_yi": 2.99,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": -0.88
-    },
-    {
-      "name": "工业金属",
-      "main_net_inflow_yi": 2.99,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 3.23
-    },
-    {
-      "name": "磷肥及磷化工",
-      "main_net_inflow_yi": 2.98,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 2.76
-    },
-    {
-      "name": "医疗研发外包",
-      "main_net_inflow_yi": 2.95,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": -0.38
-    },
-    {
-      "name": "国际工程",
-      "main_net_inflow_yi": 2.77,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 5.1
-    },
-    {
-      "name": "热力服务",
-      "main_net_inflow_yi": 2.72,
-      "huge_net_inflow_yi": 0,
-      "big_net_inflow_yi": 0,
-      "medium_net_inflow_yi": 0,
-      "small_net_inflow_yi": 0,
-      "main_net_inflow_pct": 0,
-      "change_pct": 1.63
-    },
-    {
-      "name": "垂直应用软件",
-      "main_net_inflow_yi": 2.67,
+      "name": "光学元件",
+      "main_net_inflow_yi": 4.18,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
@@ -964,28 +264,118 @@
       "change_pct": 1.88
     },
     {
-      "name": "纺织服装设备",
-      "main_net_inflow_yi": 2.59,
+      "name": "其他专用设备",
+      "main_net_inflow_yi": 4.01,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 2.91
+      "change_pct": 0.2
     },
     {
-      "name": "核力发电",
-      "main_net_inflow_yi": 2.57,
+      "name": "膜材料",
+      "main_net_inflow_yi": 3.7,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 1.46
+      "change_pct": 2.05
     },
     {
-      "name": "多元金融",
-      "main_net_inflow_yi": 2.36,
+      "name": "计算机设备",
+      "main_net_inflow_yi": 3.34,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.12
+    },
+    {
+      "name": "其他金属新材料",
+      "main_net_inflow_yi": 3.32,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 2.31
+    },
+    {
+      "name": "模拟芯片设计",
+      "main_net_inflow_yi": 3.3,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.22
+    },
+    {
+      "name": "板材",
+      "main_net_inflow_yi": 3.17,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.77
+    },
+    {
+      "name": "钨",
+      "main_net_inflow_yi": 3.12,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 6.12
+    },
+    {
+      "name": "半导体",
+      "main_net_inflow_yi": 3.03,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.26
+    },
+    {
+      "name": "非金属材料Ⅲ",
+      "main_net_inflow_yi": 2.96,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 3.75
+    },
+    {
+      "name": "非金属材料Ⅱ",
+      "main_net_inflow_yi": 2.96,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 3.74
+    },
+    {
+      "name": "普钢",
+      "main_net_inflow_yi": 2.9,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.99
+    },
+    {
+      "name": "被动元件",
+      "main_net_inflow_yi": 2.78,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
@@ -994,14 +384,624 @@
       "change_pct": 3.24
     },
     {
-      "name": "农药",
-      "main_net_inflow_yi": 2.35,
+      "name": "光伏加工设备",
+      "main_net_inflow_yi": 2.57,
       "huge_net_inflow_yi": 0,
       "big_net_inflow_yi": 0,
       "medium_net_inflow_yi": 0,
       "small_net_inflow_yi": 0,
       "main_net_inflow_pct": 0,
-      "change_pct": 0.36
+      "change_pct": 2.02
+    },
+    {
+      "name": "玻璃玻纤",
+      "main_net_inflow_yi": 2.54,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 4.96
+    },
+    {
+      "name": "锂电池",
+      "main_net_inflow_yi": 2.37,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 2.88
+    },
+    {
+      "name": "能源及重型设备",
+      "main_net_inflow_yi": 2.37,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.45
+    },
+    {
+      "name": "其他计算机设备",
+      "main_net_inflow_yi": 2.34,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.22
+    },
+    {
+      "name": "仪器仪表",
+      "main_net_inflow_yi": 1.97,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.45
+    },
+    {
+      "name": "塑料包装",
+      "main_net_inflow_yi": 1.94,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.83
+    },
+    {
+      "name": "环保设备Ⅲ",
+      "main_net_inflow_yi": 1.93,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.28
+    },
+    {
+      "name": "环保设备Ⅱ",
+      "main_net_inflow_yi": 1.93,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.28
+    },
+    {
+      "name": "无机盐",
+      "main_net_inflow_yi": 1.93,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.76
+    },
+    {
+      "name": "电网自动化设备",
+      "main_net_inflow_yi": 1.81,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.97
+    },
+    {
+      "name": "其他化学制品",
+      "main_net_inflow_yi": 1.72,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.57
+    },
+    {
+      "name": "体外诊断",
+      "main_net_inflow_yi": 1.59,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -1.13
+    },
+    {
+      "name": "钢铁",
+      "main_net_inflow_yi": 1.55,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.87
+    },
+    {
+      "name": "其他通信设备",
+      "main_net_inflow_yi": 1.49,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.14
+    },
+    {
+      "name": "通信终端及配件",
+      "main_net_inflow_yi": 1.47,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.7
+    },
+    {
+      "name": "元件",
+      "main_net_inflow_yi": 1.45,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 2.64
+    },
+    {
+      "name": "玻璃制造",
+      "main_net_inflow_yi": 1.44,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 3.89
+    },
+    {
+      "name": "制冷空调设备",
+      "main_net_inflow_yi": 1.39,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.0
+    },
+    {
+      "name": "光伏辅材",
+      "main_net_inflow_yi": 1.39,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.19
+    },
+    {
+      "name": "其他自动化设备",
+      "main_net_inflow_yi": 1.36,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.26
+    },
+    {
+      "name": "镍",
+      "main_net_inflow_yi": 1.35,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 2.36
+    },
+    {
+      "name": "环保",
+      "main_net_inflow_yi": 1.34,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.78
+    },
+    {
+      "name": "锂电专用设备",
+      "main_net_inflow_yi": 1.3,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 2.14
+    },
+    {
+      "name": "其他电子Ⅲ",
+      "main_net_inflow_yi": 1.2,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 2.76
+    },
+    {
+      "name": "其他电子Ⅱ",
+      "main_net_inflow_yi": 1.2,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 2.76
+    },
+    {
+      "name": "建筑材料",
+      "main_net_inflow_yi": 1.11,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.46
+    },
+    {
+      "name": "玻纤制造",
+      "main_net_inflow_yi": 1.1,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 6.16
+    },
+    {
+      "name": "安防设备",
+      "main_net_inflow_yi": 1.01,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.13
+    },
+    {
+      "name": "工控设备",
+      "main_net_inflow_yi": 0.96,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.07
+    },
+    {
+      "name": "改性塑料",
+      "main_net_inflow_yi": 0.93,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.01
+    },
+    {
+      "name": "核力发电",
+      "main_net_inflow_yi": 0.91,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.99
+    },
+    {
+      "name": "检测服务",
+      "main_net_inflow_yi": 0.9,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.19
+    },
+    {
+      "name": "医疗器械",
+      "main_net_inflow_yi": 0.81,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -1.17
+    },
+    {
+      "name": "国际工程",
+      "main_net_inflow_yi": 0.79,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 3.32
+    },
+    {
+      "name": "风电整机",
+      "main_net_inflow_yi": 0.76,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.55
+    },
+    {
+      "name": "其他橡胶制品",
+      "main_net_inflow_yi": 0.68,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.96
+    },
+    {
+      "name": "专业服务",
+      "main_net_inflow_yi": 0.67,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.05
+    },
+    {
+      "name": "固废治理",
+      "main_net_inflow_yi": 0.62,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.77
+    },
+    {
+      "name": "农药",
+      "main_net_inflow_yi": 0.6,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -1.19
+    },
+    {
+      "name": "橡胶",
+      "main_net_inflow_yi": 0.55,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.55
+    },
+    {
+      "name": "动物保健Ⅱ",
+      "main_net_inflow_yi": 0.46,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.33
+    },
+    {
+      "name": "动物保健Ⅲ",
+      "main_net_inflow_yi": 0.46,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.33
+    },
+    {
+      "name": "基建市政工程",
+      "main_net_inflow_yi": 0.45,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.9
+    },
+    {
+      "name": "贸易Ⅲ",
+      "main_net_inflow_yi": 0.44,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.61
+    },
+    {
+      "name": "贸易Ⅱ",
+      "main_net_inflow_yi": 0.44,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.61
+    },
+    {
+      "name": "化学纤维",
+      "main_net_inflow_yi": 0.42,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.59
+    },
+    {
+      "name": "彩电",
+      "main_net_inflow_yi": 0.4,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.75
+    },
+    {
+      "name": "照明设备Ⅲ",
+      "main_net_inflow_yi": 0.4,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.64
+    },
+    {
+      "name": "照明设备Ⅱ",
+      "main_net_inflow_yi": 0.4,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.64
+    },
+    {
+      "name": "摩托车",
+      "main_net_inflow_yi": 0.38,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.72
+    },
+    {
+      "name": "期货",
+      "main_net_inflow_yi": 0.31,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.31
+    },
+    {
+      "name": "磨具磨料",
+      "main_net_inflow_yi": 0.29,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.25
+    },
+    {
+      "name": "粘胶",
+      "main_net_inflow_yi": 0.29,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.38
+    },
+    {
+      "name": "城商行Ⅲ",
+      "main_net_inflow_yi": 0.28,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -1.07
+    },
+    {
+      "name": "锦纶",
+      "main_net_inflow_yi": 0.27,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.75
+    },
+    {
+      "name": "配电设备",
+      "main_net_inflow_yi": 0.26,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 1.74
+    },
+    {
+      "name": "汽车电子电气系统",
+      "main_net_inflow_yi": 0.23,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.11
+    },
+    {
+      "name": "纺织服装设备",
+      "main_net_inflow_yi": 0.23,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.95
+    },
+    {
+      "name": "其他纺织",
+      "main_net_inflow_yi": 0.21,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.79
+    },
+    {
+      "name": "跨境电商",
+      "main_net_inflow_yi": 0.2,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": -0.19
+    },
+    {
+      "name": "橡胶助剂",
+      "main_net_inflow_yi": 0.18,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 3.58
     }
   ],
   "source": "eastmoney_proxy"
