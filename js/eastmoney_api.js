@@ -76,7 +76,14 @@ const EastMoneyAPI = {
                 const controller = new AbortController();
                 const timer = setTimeout(() => controller.abort(), timeout);
 
-                const resp = await fetch(proxyUrl, { signal: controller.signal });
+                // 添加X-Override头，由代理转发给东方财富API绕过反爬
+                const resp = await fetch(proxyUrl, {
+                    signal: controller.signal,
+                    headers: {
+                        'X-Override-User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'X-Override-Referer': 'https://data.eastmoney.com/'
+                    }
+                });
                 clearTimeout(timer);
 
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
