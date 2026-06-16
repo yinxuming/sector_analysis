@@ -61,6 +61,9 @@
         document.getElementById('btnPreset').addEventListener('click', function() {
             selectPresetSectors();
         });
+        document.getElementById('btnExport').addEventListener('click', exportSelectedSectors);
+        document.getElementById('btnImport').addEventListener('click', importSelectedSectors);
+        document.getElementById('importFile').addEventListener('change', handleImportFile);
         document.getElementById('sectorSearch').addEventListener('input', filterSectors);
     }
 
@@ -163,7 +166,7 @@
     }
 
     /**
-     * 渲染板块复选框列表
+     * 渲染板块复选框列表（已勾选排前面，其余按自然顺序）
      */
     function renderSectorCheckboxes() {
         const container = document.getElementById('sectorCheckboxes');
@@ -184,8 +187,16 @@
             checkedSectors = presetSectors.length > 0 ? presetSectors : allSectors;
         }
 
+        // 排序：已勾选的排前面，未勾选的按自然顺序
+        const sortedSectors = [...allSectors].sort((a, b) => {
+            const aChecked = checkedSectors.includes(a);
+            const bChecked = checkedSectors.includes(b);
+            if (aChecked !== bChecked) return aChecked ? -1 : 1;
+            return a.localeCompare(b, 'zh-CN');
+        });
+
         container.innerHTML = '';
-        allSectors.forEach(name => {
+        sortedSectors.forEach(name => {
             const label = document.createElement('label');
             const checked = checkedSectors.includes(name);
             if (checked) label.classList.add('selected');
@@ -267,6 +278,103 @@
      */
     function applySectorSelection() {
         saveSectorSelection();
+    }
+
+    /**
+     * 导出已选择板块为JSON文件
+     */
+    function exportSelectedSectors() {
+        const sectorType = document.getElementById('sectorType').value;
+        const typeKey = sectorType === 'industry' ? 'industry' : 'concept';
+        const storageKey = `selectedSectors_${typeKey}`;
+        const saved = localStorage.getItem(storageKey);
+        let selected;
+        if (saved) {
+            try { selected = JSON.parse(saved); } catch(e) { selected = []; }
+        } else {
+            selected = [];
+        }
+
+        const exportData = {
+            exportTime: new Date().toISOString(),
+            sectorType: typeKey,
+            selectedSectors: selected
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `sector_selection_${typeKey}_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    /**
+     * 导入已选择板块JSON文件
+     */
+    function importSelectedSectors() {
+        document.getElementById('importFile').click();
+    }
+
+    /**
+     * 处理导入文件
+     */
+    function handleImportFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!data.selectedSectors || !Array.isArray(data.selectedSectors)) {
+                    alert('导入失败：文件格式不正确，缺少 selectedSectors 字段');
+                    return;
+                }
+
+                const sectorType = document.getElementById('sectorType').value;
+                const typeKey = sectorType === 'industry' ? 'industry' : 'concept';
+
+                // 如果文件中的sectorType与当前不匹配，提示用户
+                if (data.sectorType && data.sectorType !== typeKey) {
+                    const typeName = data.sectorType === 'industry' ? '行业' : '概念';
+                    const currentTypeName = typeKey === 'industry' ? '行业' : '概念';
+                    if (!confirm(`导入的是${typeName}板块数据，当前是${currentTypeName}板块，是否继续？`)) {
+                        return;
+                    }
+                }
+
+                // 验证板块名称是否在当前列表中
+                const allSectors = sectorListData[typeKey]?.all || [];
+                const validSectors = data.selectedSectors.filter(name => allSectors.includes(name));
+                const invalidCount = data.selectedSectors.length - validSectors.length;
+
+                if (validSectors.length === 0) {
+                    alert('导入失败：没有匹配的板块名称');
+                    return;
+                }
+
+                // 保存到localStorage
+                const storageKey = `selectedSectors_${typeKey}`;
+                localStorage.setItem(storageKey, JSON.stringify(validSectors));
+                selectedSectors = validSectors;
+
+                // 重新渲染
+                renderSectorCheckboxes();
+
+                let msg = `成功导入 ${validSectors.length} 个板块`;
+                if (invalidCount > 0) {
+                    msg += `（${invalidCount} 个板块名称不匹配已忽略）`;
+                }
+                alert(msg);
+            } catch (err) {
+                alert('导入失败：文件解析错误 - ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        // 重置file input，允许重复选择同一文件
+        event.target.value = '';
     }
 
     /**
@@ -403,6 +511,8 @@
 
         // 应用板块过滤
         const filteredData = filterDataBySectors(data);
+        // 分时图自适应高度
+        adjustChartHeight(chartDom, filteredData, 'intraday');
         currentChart = ChartRender.renderIntradayChart(chartDom, filteredData);
 
         // 更新时间和汇总
@@ -508,9 +618,37 @@
     }
 
     /**
+     * 根据数据量自适应图表容器高度
+     * 柱状图/桑基图：每个板块约28px + 标题和边距
+     * 热力图/分时图：使用默认高度
+     */
+    function adjustChartHeight(chartDom, data, chartType) {
+        const sectorCount = (data.sectors || []).length;
+        let height;
+
+        if (chartType === 'bar' || chartType === 'sankey') {
+            // 横向柱状图：每个板块需要约28px高度，加上标题和边距
+            height = Math.max(400, sectorCount * 28 + 80);
+        } else if (chartType === 'heatmap') {
+            // 热力图：根据板块数量计算网格
+            const cols = Math.ceil(Math.sqrt(sectorCount));
+            const rows = Math.ceil(sectorCount / cols);
+            height = Math.max(400, rows * 70 + 80);
+        } else {
+            // 分时图等：默认高度
+            height = 600;
+        }
+
+        chartDom.style.height = height + 'px';
+    }
+
+    /**
      * 渲染图表
      */
     function renderChart(chartDom, data, chartType) {
+        // 自适应高度
+        adjustChartHeight(chartDom, data, chartType);
+
         switch (chartType) {
             case 'bar':
                 currentChart = ChartRender.renderBarChart(chartDom, data);

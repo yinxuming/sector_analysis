@@ -11,8 +11,7 @@ const ChartRender = {
     renderBarChart(chartDom, data) {
         const chart = echarts.init(chartDom, 'dark');
         const sectors = data.sectors || [];
-        const topN = parseInt(document.getElementById('topN').value) || 30;
-        const displaySectors = topN > 0 ? sectors.slice(0, topN) : sectors;
+        const displaySectors = sectors;
 
         // 按净流入排序（从小到大，ECharts barh从下到上）
         displaySectors.sort((a, b) => a.main_net_inflow_yi - b.main_net_inflow_yi);
@@ -110,8 +109,7 @@ const ChartRender = {
     renderHeatmap(chartDom, data) {
         const chart = echarts.init(chartDom, 'dark');
         const sectors = data.sectors || [];
-        const topN = parseInt(document.getElementById('topN').value) || 30;
-        const displaySectors = topN > 0 ? sectors.slice(0, topN) : sectors;
+        const displaySectors = sectors;
 
         // 按净流入绝对值排序
         displaySectors.sort((a, b) => Math.abs(b.main_net_inflow_yi) - Math.abs(a.main_net_inflow_yi));
@@ -405,8 +403,7 @@ const ChartRender = {
         const chart = echarts.init(chartDom, 'dark');
         const times = data.times || [];
         const sectors = data.sectors || [];
-        const topN = parseInt(document.getElementById('topN').value) || 30;
-        const displaySectors = topN > 0 ? sectors.slice(0, topN) : sectors;
+        const displaySectors = sectors;
 
         if (times.length === 0 || displaySectors.length === 0) {
             chart.showLoading({ text: '暂无分时数据\n需在交易时段运行定时采集积累数据' });

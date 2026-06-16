@@ -16,9 +16,9 @@ const CONFIG = {
 
     // 默认配置
     defaults: {
-        sectorType: 'industry',
+        sectorType: 'concept',
         indicator: '今日',
-        chartType: 'bar',
+        chartType: 'intraday',
         topN: 30
     },
     // 颜色配置

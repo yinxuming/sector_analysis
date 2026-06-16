@@ -328,20 +328,25 @@ const EastMoneyAPI = {
 
         if (times.length === 0) return null;
 
-        // 4. 构建每个板块的分时数据（累计主力净流入）
+        // 4. 构建每个板块的分时数据（klines返回的是累计主力净流入，直接使用）
         const sectorsData = displaySectors.map(sector => {
             const flows = flowData[sector.code] || [];
-            // 东方财富返回的是每分钟的净流入值（非累计），需要累加
-            let cumulative = 0;
-            const data = times.map((t, idx) => {
-                const flow = flows.find(f => f.timeShort === t);
-                if (flow) {
-                    cumulative += flow.mainInflowYi;
-                }
-                return +cumulative.toFixed(4);
+            const flowMap = {};
+            flows.forEach(f => { flowMap[f.timeShort] = f.mainInflowYi; });
+
+            const data = times.map(t => {
+                const val = flowMap[t];
+                return val !== undefined ? +val.toFixed(4) : null;
             });
 
-            const finalValue = data.length > 0 ? data[data.length - 1] : 0;
+            // 最后一个有效值作为最终值
+            let finalValue = 0;
+            for (let i = data.length - 1; i >= 0; i--) {
+                if (data[i] !== null) {
+                    finalValue = data[i];
+                    break;
+                }
+            }
 
             return {
                 name: sector.name,

@@ -263,7 +263,7 @@ body {
 
 .chart-container {
     width: 100%;
-    height: 600px;
+    min-height: 400px;
 }
 
 /* 汇总面板 */
@@ -320,7 +320,7 @@ body {
     }
 
     .chart-container {
-        height: 400px;
+        min-height: 300px;
     }
 
     .btn-refresh {

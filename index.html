@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>股票行业板块资金净流向分析</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-    <link rel="stylesheet" href="css/style.css?v=20260616e">
+    <link rel="stylesheet" href="css/style.css?v=20260616h">
 </head>
 <body>
     <div class="container">
@@ -21,7 +21,7 @@
                 <label>板块类型：</label>
                 <select id="sectorType">
                     <option value="industry">行业板块</option>
-                    <option value="concept">概念板块</option>
+                    <option value="concept" selected>概念板块</option>
                 </select>
             </div>
             <div class="control-group">
@@ -37,7 +37,7 @@
                 <label>图表类型：</label>
                 <select id="chartType">
                     <option value="bar">柱状图</option>
-                    <option value="intraday">分时图</option>
+                    <option value="intraday" selected>分时图</option>
                     <option value="heatmap">热力图</option>
                     <option value="sankey">桑基图</option>
                     <option value="barRace">动态排行</option>
@@ -72,11 +72,14 @@
                     <button class="btn-select-all" id="btnSelectAll">全选</button>
                     <button class="btn-deselect-all" id="btnDeselectAll">全不选</button>
                     <button class="btn-preset" id="btnPreset">恢复预设</button>
+                    <button class="btn-export" id="btnExport">导出</button>
+                    <button class="btn-import" id="btnImport">导入</button>
                     <button class="btn-close-config" id="btnCloseConfig">关闭</button>
                 </div>
             </div>
             <div class="config-search">
                 <input type="text" id="sectorSearch" placeholder="搜索板块名称..." />
+                <input type="file" id="importFile" accept=".json" style="display:none" />
             </div>
             <div class="config-sectors" id="sectorCheckboxes">
                 <!-- 动态生成 -->
@@ -109,9 +112,9 @@
         </div>
     </div>
 
-    <script src="js/config.js?v=20260616e"></script>
-    <script src="js/eastmoney_api.js?v=20260616e"></script>
-    <script src="js/charts.js?v=20260616e"></script>
-    <script src="js/app.js?v=20260616e"></script>
+    <script src="js/config.js?v=20260616h"></script>
+    <script src="js/eastmoney_api.js?v=20260616h"></script>
+    <script src="js/charts.js?v=20260616h"></script>
+    <script src="js/app.js?v=20260616h"></script>
 </body>
 </html>
