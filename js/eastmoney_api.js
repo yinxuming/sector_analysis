@@ -163,8 +163,9 @@ const EastMoneyAPI = {
 
         try {
             // 分页获取全部板块
+            // 精简fields避免代理URL过长（代理对query string有长度限制，完整fields会502）
             while (true) {
-                const url = `https://push2.eastmoney.com/api/qt/clist/get?pn=${page}&pz=${pageSize}&po=1&np=1&fltt=2&invt=2&fid=f62&fs=${fs}&fields=f12,f14,f2,f3,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87`;
+                const url = `https://push2.eastmoney.com/api/qt/clist/get?pn=${page}&pz=${pageSize}&po=1&np=1&fltt=2&invt=2&fid=f62&fs=${fs}&fields=f12,f14,f3,f62`;
                 const resp = await this._jsonp(url);
 
                 if (!resp || !resp.data || !resp.data.diff || resp.data.diff.length === 0) {
@@ -180,19 +181,9 @@ const EastMoneyAPI = {
                     allSectors.push({
                         code: code,
                         name: name,
-                        price: item.f2,
                         changePct: item.f3,
                         mainNetInflow: item.f62,
                         mainNetInflowYi: +(item.f62 / 1e8).toFixed(2),
-                        hugeNetInflow: item.f66,
-                        hugeNetInflowPct: item.f69,
-                        bigNetInflow: item.f72,
-                        bigNetInflowPct: item.f75,
-                        mediumNetInflow: item.f78,
-                        mediumNetInflowPct: item.f81,
-                        smallNetInflow: item.f84,
-                        smallNetInflowPct: item.f87,
-                        mainNetInflowPct: item.f184
                     });
                 }
 
@@ -390,11 +381,6 @@ const EastMoneyAPI = {
             sectors: sectors.map(s => ({
                 name: s.name,
                 main_net_inflow_yi: s.mainNetInflowYi,
-                huge_net_inflow_yi: +(s.hugeNetInflow / 1e8).toFixed(2),
-                big_net_inflow_yi: +(s.bigNetInflow / 1e8).toFixed(2),
-                medium_net_inflow_yi: +(s.mediumNetInflow / 1e8).toFixed(2),
-                small_net_inflow_yi: +(s.smallNetInflow / 1e8).toFixed(2),
-                main_net_inflow_pct: s.mainNetInflowPct,
                 change_pct: s.changePct
             })),
             source: 'eastmoney'
