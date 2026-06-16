@@ -77,8 +77,27 @@
         btn.textContent = '获取中...';
 
         try {
-            const resp = await fetch('/api/intraday-full');
-            const result = await resp.json();
+            // 优先尝试后端API（本地服务），失败则通过前端代理直接获取
+            let result = null;
+            try {
+                const resp = await fetch('/api/intraday-full');
+                result = await resp.json();
+            } catch (e) {
+                // 后端不可用（GitHub Pages环境），通过前端代理获取
+                console.log('后端API不可用，通过前端代理获取分时数据');
+            }
+
+            if (!result || !result.success) {
+                // 前端代理方式：直接调用东方财富API获取分时数据
+                const sectorType = document.getElementById('sectorType').value;
+                const topN = parseInt(document.getElementById('topN').value) || 30;
+                const data = await EastMoneyAPI.buildIntradayData(sectorType, topN);
+                if (data) {
+                    result = { success: true };
+                } else {
+                    result = { success: false, message: '东方财富API获取失败' };
+                }
+            }
 
             if (result.success) {
                 btn.textContent = '获取成功';
@@ -93,7 +112,7 @@
                     btn.classList.remove('success');
                 }, 3000);
             } else {
-                btn.textContent = '获取失败';
+                btn.textContent = result.message || '获取失败';
                 setTimeout(() => {
                     btn.disabled = false;
                     btn.textContent = originalText;
@@ -101,7 +120,7 @@
             }
         } catch (err) {
             console.error('获取完整分时数据失败:', err);
-            btn.textContent = '请求失败（需本地服务支持）';
+            btn.textContent = '获取失败';
             setTimeout(() => {
                 btn.disabled = false;
                 btn.textContent = originalText;
