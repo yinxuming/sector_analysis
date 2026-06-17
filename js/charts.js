@@ -16,9 +16,16 @@ const ChartRender = {
         // 按净流入排序（从小到大，ECharts barh从下到上）
         displaySectors.sort((a, b) => a.main_net_inflow_yi - b.main_net_inflow_yi);
 
-        const names = displaySectors.map(s => s.name);
+        const names = displaySectors.map(s => {
+            const pct = s.change_pct || 0;
+            const pctStr = pct >= 0 ? `+${pct.toFixed(2)}%` : `${pct.toFixed(2)}%`;
+            const pctColor = pct >= 0 ? '#f85149' : '#3fb950';
+            // 富文本: 板块名 + 涨跌幅(红涨绿跌)
+            return `{name|${s.name}}{pct|(${pctStr})}`;
+        });
         const values = displaySectors.map(s => s.main_net_inflow_yi);
-        const changePcts = displaySectors.map(s => s.change_pct);
+        const changePcts = displaySectors.map(s => s.change_pct || 0);
+        const turnoverYis = displaySectors.map(s => s.turnover_yi || 0);
 
         const option = {
             backgroundColor: '#161b22',
@@ -33,14 +40,17 @@ const ChartRender = {
                 formatter: function(params) {
                     const idx = params[0].dataIndex;
                     const s = displaySectors[idx];
+                    const pctColor = s.change_pct >= 0 ? '#f85149' : '#3fb950';
+                    const turnover = s.turnover_yi || 0;
                     return `<b>${s.name}</b><br/>` +
                            `主力净流入: <span style="color:${s.main_net_inflow_yi >= 0 ? '#f85149' : '#3fb950'}">${s.main_net_inflow_yi.toFixed(2)}亿</span><br/>` +
-                           `涨跌幅: <span style="color:${s.change_pct >= 0 ? '#f85149' : '#3fb950'}">${s.change_pct.toFixed(2)}%</span><br/>` +
-                           `主力净占比: ${s.main_net_inflow_pct.toFixed(2)}%`;
+                           `涨跌幅: <span style="color:${pctColor}">${s.change_pct >= 0 ? '+' : ''}${s.change_pct.toFixed(2)}%</span><br/>` +
+                           `成交额: <span style="color:#58a6ff">${turnover.toFixed(1)}亿</span><br/>` +
+                           `主力净占比: ${(s.main_net_inflow_pct || 0).toFixed(2)}%`;
                 }
             },
             grid: {
-                left: '3%',
+                left: '2%',
                 right: '6%',
                 bottom: '3%',
                 top: '12%',
@@ -60,8 +70,23 @@ const ChartRender = {
                 axisLabel: {
                     color: '#e6edf3',
                     fontSize: 12,
-                    width: 80,
-                    overflow: 'truncate'
+                    width: 200,
+                    overflow: 'none',
+                    rich: {
+                        name: { color: '#e6edf3', fontSize: 12 },
+                        pct: { color: null, fontSize: 12, fontWeight: 'bold' }
+                    },
+                    formatter: function(params) {
+                        // 富文本中pct颜色需要动态设置
+                        const idx = displaySectors.findIndex(s =>
+                            params.includes(s.name));
+                        if (idx >= 0) {
+                            const pct = displaySectors[idx].change_pct || 0;
+                            const pctColor = pct >= 0 ? '#f85149' : '#3fb950';
+                            return params.replace('{pct|', `{pct|color:${pctColor};`);
+                        }
+                        return params;
+                    }
                 }
             },
             series: [{
@@ -122,7 +147,8 @@ const ChartRender = {
             name: s.name,
             value: Math.abs(s.main_net_inflow_yi),
             netInflow: s.main_net_inflow_yi,
-            changePct: s.change_pct,
+            changePct: s.change_pct || 0,
+            turnoverYi: s.turnover_yi || 0,
             itemStyle: {
                 color: s.main_net_inflow_yi >= 0 ? '#f85149' : '#3fb950',
                 borderColor: '#0d1117',
@@ -141,9 +167,11 @@ const ChartRender = {
                 formatter: function(info) {
                     const d = info.data;
                     if (!d) return '';
+                    const pctColor = d.changePct >= 0 ? '#f85149' : '#3fb950';
                     return `<b>${d.name}</b><br/>` +
                            `主力净流入: <span style="color:${d.netInflow >= 0 ? '#f85149' : '#3fb950'}">${d.netInflow.toFixed(2)}亿</span><br/>` +
-                           `涨跌幅: <span style="color:${d.changePct >= 0 ? '#f85149' : '#3fb950'}">${d.changePct.toFixed(2)}%</span>`;
+                           `涨跌幅: <span style="color:${pctColor}">${d.changePct >= 0 ? '+' : ''}${d.changePct.toFixed(2)}%</span><br/>` +
+                           `成交额: <span style="color:#58a6ff">${d.turnoverYi.toFixed(1)}亿</span>`;
                 }
             },
             series: [{
@@ -159,7 +187,8 @@ const ChartRender = {
                     show: true,
                     formatter: function(params) {
                         const d = params.data;
-                        return `${d.name}\n${d.netInflow.toFixed(1)}亿`;
+                        const pct = d.changePct >= 0 ? `+${d.changePct.toFixed(2)}%` : `${d.changePct.toFixed(2)}%`;
+                        return `${d.name}(${pct})\n${d.netInflow.toFixed(1)}亿`;
                     },
                     fontSize: 12,
                     color: '#fff'
@@ -197,20 +226,22 @@ const ChartRender = {
         const inflowSectors = displaySectors.filter(s => s.main_net_inflow_yi > 0);
         const outflowSectors = displaySectors.filter(s => s.main_net_inflow_yi < 0);
 
-        // 构建桑基图节点
+        // 构建桑基图节点（标签格式：板块名(涨幅)）
         const nodes = [];
         nodes.push({ name: '市场资金', itemStyle: { color: '#58a6ff' } });
 
         inflowSectors.forEach(s => {
+            const pct = (s.change_pct || 0) >= 0 ? `+${(s.change_pct || 0).toFixed(2)}%` : `${(s.change_pct || 0).toFixed(2)}%`;
             nodes.push({
-                name: s.name,
+                name: `${s.name}(${pct})`,
                 itemStyle: { color: '#f85149' }
             });
         });
 
         outflowSectors.forEach(s => {
+            const pct = (s.change_pct || 0) >= 0 ? `+${(s.change_pct || 0).toFixed(2)}%` : `${(s.change_pct || 0).toFixed(2)}%`;
             nodes.push({
-                name: s.name,
+                name: `${s.name}(${pct})`,
                 itemStyle: { color: '#3fb950' }
             });
         });
@@ -219,16 +250,18 @@ const ChartRender = {
         const links = [];
         // 流入板块：市场 -> 板块
         inflowSectors.forEach(s => {
+            const pct = (s.change_pct || 0) >= 0 ? `+${(s.change_pct || 0).toFixed(2)}%` : `${(s.change_pct || 0).toFixed(2)}%`;
             links.push({
                 source: '市场资金',
-                target: s.name,
+                target: `${s.name}(${pct})`,
                 value: Math.abs(s.main_net_inflow_yi)
             });
         });
         // 流出板块：板块 -> 市场
         outflowSectors.forEach(s => {
+            const pct = (s.change_pct || 0) >= 0 ? `+${(s.change_pct || 0).toFixed(2)}%` : `${(s.change_pct || 0).toFixed(2)}%`;
             links.push({
-                source: s.name,
+                source: `${s.name}(${pct})`,
                 target: '市场资金',
                 value: Math.abs(s.main_net_inflow_yi)
             });
@@ -397,7 +430,7 @@ const ChartRender = {
     /**
      * 渲染分时折线图 - 板块资金流向分时曲线
      * 每个板块一条折线，X轴为交易时间，Y轴为累计净流入金额
-     * 参考雪球研习社/同花顺风格
+     * 右侧末端标签显示板块名称(涨幅)+净流入，防重叠依次展开
      */
     renderIntradayChart(chartDom, data) {
         const chart = echarts.init(chartDom, 'dark');
@@ -410,36 +443,97 @@ const ChartRender = {
             return chart;
         }
 
-        // 颜色池（红涨绿跌渐变色系）
+        // 丰富颜色池：每个板块用不同颜色区分
         const colorPool = [
-            '#f85149', '#ff7b72', '#ff9a8b', '#ffa198', '#ffb4aa',
-            '#3fb950', '#56d364', '#7ee787', '#a5d6a7',
-            '#58a6ff', '#79c0ff', '#a5d6ff',
-            '#d2a8ff', '#bc8cff', '#e6b3ff',
-            '#f0883e', '#f7ba61', '#ffd700',
-            '#a371f7', '#8957e5', '#da3633'
+            '#f85149', '#ff7b72', '#ffa198',       // 红色系
+            '#3fb950', '#56d364', '#7ee787',       // 绿色系
+            '#58a6ff', '#79c0ff', '#a5d6ff',       // 蓝色系
+            '#d2a8ff', '#bc8cff', '#e6b3ff',       // 紫色系
+            '#f0883e', '#f7ba61', '#ffd700',       // 橙黄系
+            '#a371f7', '#8957e5', '#da3633',       // 深色系
+            '#39d353', '#26a641', '#1f6feb',       // 补充色
+            '#f778ba', '#ff9bce', '#db61a2'        // 粉色系
         ];
 
-        // 构建系列：每个板块一条折线
-        const series = displaySectors.map((sector, index) => {
-            const isPositive = sector.final_value >= 0;
-            // 流入用红色系，流出用绿色系
-            let color;
-            if (isPositive) {
-                color = colorPool[index % 6];  // 红色系
-            } else {
-                color = colorPool[6 + (index % 5)];  // 绿色系
+        // 计算Y轴范围（留出标签空间）
+        let maxVal = -Infinity;
+        let minVal = Infinity;
+        displaySectors.forEach(s => {
+            s.data.forEach(v => {
+                if (v !== null && v > maxVal) maxVal = v;
+                if (v !== null && v < minVal) minVal = v;
+            });
+        });
+        const padding = Math.max(Math.abs(maxVal - minVal) * 0.15, 10);
+        const yMin = Math.floor(minVal - padding);
+        const yMax = Math.ceil(maxVal + padding);
+
+        // 计算标签防重叠偏移量 - 从中间向上下两侧发散
+        const labelHeight = 16; // 每个标签占用的像素高度
+        const labelOffsets = new Array(displaySectors.length).fill(0);
+        const sortedWithIndex = displaySectors
+            .map((s, i) => ({ final_value: s.final_value, index: i }))
+            .sort((a, b) => a.final_value - b.final_value);
+
+        // 将Y值转换为像素位置
+        const chartHeight = parseInt(chartDom.style.height) || 600;
+        const gridTop = chartHeight * 0.12;
+        const gridBottom = chartHeight * 0.05;
+        const plotHeight = chartHeight - gridTop - gridBottom;
+        const yRange = yMax - yMin || 1;
+
+        // 计算每个标签的原始像素Y坐标
+        const pixelPositions = sortedWithIndex.map(item =>
+            gridTop + plotHeight * (1 - (item.final_value - yMin) / yRange)
+        );
+
+        // 从中间向两侧发散：中间标签不偏移，上方标签向上偏，下方标签向下偏
+        const n = sortedWithIndex.length;
+        const midIdx = Math.floor(n / 2);
+
+        // 中间标签不偏移
+        for (let i = midIdx; i < n; i++) {
+            // 下半部分（Y值较大，像素位置靠上）：向下偏移
+            for (let j = midIdx; j < i; j++) {
+                const curY = pixelPositions[i] + labelOffsets[sortedWithIndex[i].index];
+                const prevY = pixelPositions[j] + labelOffsets[sortedWithIndex[j].index];
+                if (curY < prevY && prevY - curY < labelHeight) {
+                    labelOffsets[sortedWithIndex[i].index] += (prevY - labelHeight) - curY;
+                }
             }
+        }
+
+        for (let i = midIdx - 1; i >= 0; i--) {
+            // 上半部分（Y值较小，像素位置靠下）：向上偏移
+            for (let j = midIdx - 1; j > i; j--) {
+                const curY = pixelPositions[i] + labelOffsets[sortedWithIndex[i].index];
+                const prevY = pixelPositions[j] + labelOffsets[sortedWithIndex[j].index];
+                if (curY > prevY && curY - prevY < labelHeight) {
+                    labelOffsets[sortedWithIndex[i].index] -= (curY - (prevY + labelHeight));
+                }
+            }
+        }
+
+        // 构建series，应用偏移和板块名(涨幅)格式
+        const finalSeries = displaySectors.map((sector, index) => {
+            const color = colorPool[index % colorPool.length];
+            const isPositive = sector.final_value >= 0;
+            const changePct = sector.change_pct || 0;
+            const pctStr = changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`;
+            const turnoverYi = sector.turnover_yi || 0;
+            const valStr = sector.final_value >= 0 ? `+${sector.final_value.toFixed(2)}` : `${sector.final_value.toFixed(2)}`;
+            const valColor = isPositive ? '#f85149' : '#3fb950';
+            const pctColor = changePct >= 0 ? '#f85149' : '#3fb950';
 
             return {
                 name: sector.name,
                 type: 'line',
                 data: sector.data,
                 smooth: false,
-                symbol: 'none',          // 不显示数据点标记
+                symbol: 'none',
                 lineStyle: { width: 1.5, color: color },
                 itemStyle: { color: color },
-                // 末端标签显示板块名称和最终值
+                // 末端标签：与tooltip格式一致，富文本实现红涨绿跌
                 markPoint: {
                     symbol: 'circle',
                     symbolSize: 4,
@@ -447,28 +541,25 @@ const ChartRender = {
                     label: {
                         show: true,
                         position: 'right',
-                        formatter: function(params) {
-                            return `${sector.name} ${sector.final_value > 0 ? '+' : ''}${sector.final_value.toFixed(2)}`;
-                        },
+                        formatter: [
+                            `{name|${sector.name}}`,
+                            `{pct|(${pctStr})}: `,
+                            `{val|${valStr}亿} `,
+                            `{turnover|${turnoverYi.toFixed(1)}亿}`
+                        ].join(''),
                         fontSize: 11,
-                        color: isPositive ? '#f85149' : '#3fb950',
-                        fontWeight: 'bold'
+                        rich: {
+                            name: { color: '#e6edf3', fontSize: 11, fontWeight: 'bold' },
+                            pct: { color: pctColor, fontSize: 11, fontWeight: 'bold' },
+                            val: { color: valColor, fontSize: 11, fontWeight: 'bold' },
+                            turnover: { color: '#58a6ff', fontSize: 11 }
+                        },
+                        offset: [0, labelOffsets[index]]
                     },
                     data: [{ coord: [times.length - 1, sector.final_value] }]
                 }
             };
         });
-
-        // 计算Y轴范围（留出标签空间）
-        let maxVal = -Infinity;
-        let minVal = Infinity;
-        displaySectors.forEach(s => {
-            s.data.forEach(v => {
-                if (v > maxVal) maxVal = v;
-                if (v < minVal) minVal = v;
-            });
-        });
-        const padding = Math.max(Math.abs(maxVal - minVal) * 0.15, 10);
 
         const option = {
             backgroundColor: '#161b22',
@@ -485,25 +576,38 @@ const ChartRender = {
                 formatter: function(params) {
                     if (!params || params.length === 0) return '';
                     let html = `<b>${params[0].axisValue}</b><br/>`;
-                    params.sort((a, b) => b.value - a.value);
-                    params.slice(0, 10).forEach(p => {
+                    // 按当前值排序
+                    params.sort((a, b) => (b.value || 0) - (a.value || 0));
+                    let totalTurnover = 0;
+                    params.forEach(p => {
+                        const sector = displaySectors.find(s => s.name === p.seriesName);
+                        if (!sector) return;
                         const val = p.value !== undefined && p.value !== null ? p.value.toFixed(2) : '-';
-                        const color = p.value >= 0 ? '#f85149' : '#3fb950';
-                        html += `<span style="color:${p.color}">${p.seriesName}</span>: ` +
-                                `<span style="color:${color}">${val}亿</span><br/>`;
+                        const changePct = sector.change_pct || 0;
+                        const turnoverYi = sector.turnover_yi || 0;
+                        totalTurnover += turnoverYi;
+                        const pctStr = changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`;
+                        const valStr = (p.value >= 0 ? '+' : '') + val + '亿';
+                        const valColor = p.value >= 0 ? '#f85149' : '#3fb950';
+                        const pctColor = changePct >= 0 ? '#f85149' : '#3fb950';
+                        // 格式: 板块名(涨幅): 净流入 成交额
+                        html += `<span style="color:${p.color}">●</span> ${p.seriesName}` +
+                                `(<span style="color:${pctColor};font-weight:bold">${pctStr}</span>): ` +
+                                `<span style="color:${valColor};font-weight:bold">${valStr}</span> ` +
+                                `<span style="color:#58a6ff">${turnoverYi.toFixed(1)}亿</span><br/>`;
                     });
-                    if (params.length > 10) {
-                        html += `<span style="color:#8b949e">...等${params.length}个板块</span>`;
-                    }
+                    html += `<hr style="border-color:#30363d;margin:4px 0"/>` +
+                            `<span style="color:#8b949e">总成交额: </span>` +
+                            `<span style="color:#58a6ff;font-weight:bold">${totalTurnover.toFixed(1)}亿</span>`;
                     return html;
                 }
             },
             legend: {
-                show: false  // 板块多时不显示图例，用末端标签代替
+                show: false
             },
             grid: {
                 left: '8%',
-                right: '18%',   // 右侧留空间给末端标签
+                right: '28%',
                 bottom: '5%',
                 top: '12%',
                 containLabel: false
@@ -526,10 +630,9 @@ const ChartRender = {
                     formatter: v => v + '亿'
                 },
                 splitLine: { lineStyle: { color: '#21262d', type: 'dashed' } },
-                // 零线加粗高亮
                 axisTick: { show: false },
-                min: Math.floor(minVal - padding),
-                max: Math.ceil(maxVal + padding)
+                min: yMin,
+                max: yMax
             },
             // 零线参考线
             markLine: {
@@ -538,13 +641,167 @@ const ChartRender = {
                 lineStyle: { color: '#8b949e', width: 1, type: 'solid' },
                 data: [{ yAxis: 0 }]
             },
-            series: series,
+            series: finalSeries,
             animationDuration: 1000,
             animationEasing: 'cubicOut'
         };
 
         chart.setOption(option);
+
+        // 点击右侧标签(markPoint)切换对应曲线显隐
+        // 记录每个series的显隐状态
+        const seriesVisible = new Array(finalSeries.length).fill(true);
+
+        chart.on('click', function(params) {
+            if (params.componentType === 'markPoint' && params.seriesName) {
+                const seriesIndex = finalSeries.findIndex(s => s.name === params.seriesName);
+                if (seriesIndex === -1) return;
+
+                seriesVisible[seriesIndex] = !seriesVisible[seriesIndex];
+                const visible = seriesVisible[seriesIndex];
+                const color = colorPool[seriesIndex % colorPool.length];
+                const sector = displaySectors[seriesIndex];
+                const changePct = sector.change_pct || 0;
+                const isPositive = sector.final_value >= 0;
+                const pctColor = changePct >= 0 ? '#f85149' : '#3fb950';
+                const valColor = isPositive ? '#f85149' : '#3fb950';
+
+                // 构造更新：仅更新目标series
+                const updates = new Array(finalSeries.length).fill(null);
+                if (visible) {
+                    // 恢复显示
+                    updates[seriesIndex] = {
+                        lineStyle: { width: 1.5, opacity: 1 },
+                        markPoint: {
+                            label: {
+                                rich: {
+                                    name: { color: '#e6edf3' },
+                                    pct: { color: pctColor },
+                                    val: { color: valColor },
+                                    turnover: { color: '#58a6ff' }
+                                }
+                            }
+                        }
+                    };
+                } else {
+                    // 隐藏曲线，标签变灰
+                    updates[seriesIndex] = {
+                        lineStyle: { width: 0, opacity: 0 },
+                        markPoint: {
+                            label: {
+                                rich: {
+                                    name: { color: '#484f58' },
+                                    pct: { color: '#484f58' },
+                                    val: { color: '#484f58' },
+                                    turnover: { color: '#484f58' }
+                                }
+                            }
+                        }
+                    };
+                }
+                chart.setOption({ series: updates });
+            }
+        });
+
         window.addEventListener('resize', () => chart.resize());
         return chart;
+    },
+
+    /**
+     * 渲染板块数据表格 - 显示每个板块的实时涨幅、成交额、净流入额，支持点击表头排序
+     * @param {HTMLElement} chartDom - 图表容器DOM
+     * @param {Object} data - 板块数据
+     * @returns {Object} 包含dispose方法的对象（与其他渲染方法保持一致）
+     */
+    renderTable(chartDom, data) {
+        const sectors = data.sectors || [];
+        if (sectors.length === 0) {
+            chartDom.innerHTML = '<div style="text-align:center;padding:100px;color:#8b949e;">暂无数据</div>';
+            return { dispose: () => {} };
+        }
+
+        // 当前排序状态
+        let sortField = 'main_net_inflow_yi';
+        let sortOrder = 'desc'; // desc=降序, asc=升序
+
+        /**
+         * 渲染表格HTML
+         */
+        function render() {
+            // 排序数据
+            const sorted = [...sectors].sort((a, b) => {
+                let va = a[sortField];
+                let vb = b[sortField];
+                // 字符串字段用localeCompare
+                if (sortField === 'name') {
+                    return sortOrder === 'desc'
+                        ? (vb || '').localeCompare(va || '', 'zh-CN')
+                        : (va || '').localeCompare(vb || '', 'zh-CN');
+                }
+                va = va || 0;
+                vb = vb || 0;
+                return sortOrder === 'desc' ? vb - va : va - vb;
+            });
+
+            // 排序指示箭头
+            const arrow = (field) => {
+                if (sortField !== field) return ' <span style="color:#484f58">&#9650;&#9660;</span>';
+                return sortOrder === 'desc' ? ' <span style="color:#58a6ff">&#9660;</span>' : ' <span style="color:#58a6ff">&#9650;</span>';
+            };
+
+            let html = `
+            <div class="sector-table-title">${data.sector_type || '板块'} - ${data.indicator || '今日'}资金净流向</div>
+            <table class="sector-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-field="name">板块${arrow('name')}</th>
+                        <th class="sortable" data-field="change_pct">涨跌幅${arrow('change_pct')}</th>
+                        <th class="sortable" data-field="main_net_inflow_yi">主力净流入(亿)${arrow('main_net_inflow_yi')}</th>
+                        <th class="sortable" data-field="turnover_yi">成交额(亿)${arrow('turnover_yi')}</th>
+                        <th class="sortable" data-field="main_net_inflow_pct">净流入占比${arrow('main_net_inflow_pct')}</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            sorted.forEach((s, i) => {
+                const pct = s.change_pct || 0;
+                const pctColor = pct >= 0 ? '#f85149' : '#3fb950';
+                const pctStr = pct >= 0 ? `+${pct.toFixed(2)}%` : `${pct.toFixed(2)}%`;
+                const val = s.main_net_inflow_yi || 0;
+                const valColor = val >= 0 ? '#f85149' : '#3fb950';
+                const valStr = val >= 0 ? `+${val.toFixed(2)}` : `${val.toFixed(2)}`;
+                const turnover = s.turnover_yi || 0;
+                const pctInflow = s.main_net_inflow_pct || 0;
+
+                html += `
+                    <tr>
+                        <td class="sector-name">${s.name}</td>
+                        <td style="color:${pctColor};font-weight:bold">${pctStr}</td>
+                        <td style="color:${valColor};font-weight:bold">${valStr}</td>
+                        <td style="color:#58a6ff">${turnover.toFixed(1)}</td>
+                        <td>${pctInflow.toFixed(2)}%</td>
+                    </tr>`;
+            });
+
+            html += '</tbody></table>';
+            chartDom.innerHTML = html;
+
+            // 绑定表头排序事件
+            chartDom.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', function() {
+                    const field = this.dataset.field;
+                    if (sortField === field) {
+                        sortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+                    } else {
+                        sortField = field;
+                        sortOrder = field === 'name' ? 'asc' : 'desc';
+                    }
+                    render();
+                });
+            });
+        }
+
+        render();
+        return { dispose: () => { chartDom.innerHTML = ''; } };
     }
 };

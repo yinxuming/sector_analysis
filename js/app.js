@@ -634,6 +634,9 @@
             const cols = Math.ceil(Math.sqrt(sectorCount));
             const rows = Math.ceil(sectorCount / cols);
             height = Math.max(400, rows * 70 + 80);
+        } else if (chartType === 'table') {
+            // 表格：每行约32px + 表头40px + 标题30px + 边距
+            height = Math.max(400, sectorCount * 32 + 120);
         } else {
             // 分时图等：默认高度
             height = 600;
@@ -658,6 +661,9 @@
                 break;
             case 'sankey':
                 currentChart = ChartRender.renderSankey(chartDom, data);
+                break;
+            case 'table':
+                currentChart = ChartRender.renderTable(chartDom, data);
                 break;
             default:
                 currentChart = ChartRender.renderBarChart(chartDom, data);

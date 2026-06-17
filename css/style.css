@@ -264,6 +264,7 @@ body {
 .chart-container {
     width: 100%;
     min-height: 400px;
+    overflow-y: auto;
 }
 
 /* 汇总面板 */
@@ -326,4 +327,57 @@ body {
     .btn-refresh {
         margin-left: 0;
     }
+}
+
+/* 板块数据表格 */
+.sector-table-title {
+    text-align: center;
+    font-size: 18px;
+    color: #e6edf3;
+    margin-bottom: 16px;
+}
+
+.sector-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.sector-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.sector-table th {
+    background: #21262d;
+    color: #e6edf3;
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 2px solid #30363d;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.sector-table th.sortable {
+    cursor: pointer;
+}
+
+.sector-table th.sortable:hover {
+    background: #30363d;
+}
+
+.sector-table td {
+    padding: 8px 16px;
+    border-bottom: 1px solid #21262d;
+    white-space: nowrap;
+}
+
+.sector-table tbody tr:hover {
+    background: #1c2128;
+}
+
+.sector-table .sector-name {
+    color: #e6edf3;
+    font-weight: 500;
 }

@@ -165,7 +165,7 @@ const EastMoneyAPI = {
             // 分页获取全部板块
             // 精简fields避免代理URL过长（代理对query string有长度限制，完整fields会502）
             while (true) {
-                const url = `https://push2delay.eastmoney.com/api/qt/clist/get?pn=${page}&pz=${pageSize}&po=1&np=1&fltt=2&invt=2&fid=f62&fs=${fs}&fields=f12,f14,f3,f62`;
+                const url = `https://push2delay.eastmoney.com/api/qt/clist/get?pn=${page}&pz=${pageSize}&po=1&np=1&fltt=2&invt=2&fid=f62&fs=${fs}&fields=f12,f14,f3,f6,f62`;
                 const resp = await this._jsonp(url);
 
                 if (!resp || !resp.data || !resp.data.diff || resp.data.diff.length === 0) {
@@ -182,6 +182,8 @@ const EastMoneyAPI = {
                         code: code,
                         name: name,
                         changePct: item.f3,
+                        turnover: item.f6 || 0,          // 成交额（元）
+                        turnoverYi: +((item.f6 || 0) / 1e8).toFixed(2),  // 成交额（亿元）
                         mainNetInflow: item.f62,
                         mainNetInflowYi: +(item.f62 / 1e8).toFixed(2),
                     });
@@ -351,7 +353,9 @@ const EastMoneyAPI = {
             return {
                 name: sector.name,
                 data: data,
-                final_value: +finalValue.toFixed(2)
+                final_value: +finalValue.toFixed(2),
+                change_pct: sector.changePct || 0,
+                turnover_yi: sector.turnoverYi || 0
             };
         });
 
@@ -396,7 +400,12 @@ const EastMoneyAPI = {
             sectors: displaySectors.map(s => ({
                 name: s.name,
                 main_net_inflow_yi: s.mainNetInflowYi,
-                change_pct: s.changePct
+                change_pct: s.changePct,
+                turnover_yi: s.turnoverYi,
+                // 净流入占成交额比例 = 净流入 / 成交额 * 100
+                main_net_inflow_pct: (s.turnoverYi && s.turnoverYi > 0)
+                    ? +(s.mainNetInflowYi / s.turnoverYi * 100).toFixed(2)
+                    : 0
             })),
             source: 'eastmoney'
         };
