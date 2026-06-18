@@ -16,12 +16,16 @@ const ChartRender = {
         // 按净流入排序（从小到大，ECharts barh从下到上）
         displaySectors.sort((a, b) => a.main_net_inflow_yi - b.main_net_inflow_yi);
 
-        const names = displaySectors.map(s => {
+        // 为每个板块构建独立的rich样式（实现动态颜色）
+        const richStyles = { name: { color: '#e6edf3', fontSize: 12 } };
+        const names = displaySectors.map((s, i) => {
             const pct = s.change_pct || 0;
             const pctStr = pct >= 0 ? `+${pct.toFixed(2)}%` : `${pct.toFixed(2)}%`;
             const pctColor = pct >= 0 ? '#f85149' : '#3fb950';
-            // 富文本: 板块名 + 涨跌幅(红涨绿跌)
-            return `{name|${s.name}}{pct|(${pctStr})}`;
+            // 每个板块使用独立的rich样式key，避免内联style
+            const pctKey = `pct_${i}`;
+            richStyles[pctKey] = { color: pctColor, fontSize: 12, fontWeight: 'bold' };
+            return `{name|${s.name}}{${pctKey}|(${pctStr})}`;
         });
         const values = displaySectors.map(s => s.main_net_inflow_yi);
         const changePcts = displaySectors.map(s => s.change_pct || 0);
@@ -72,21 +76,7 @@ const ChartRender = {
                     fontSize: 12,
                     width: 200,
                     overflow: 'none',
-                    rich: {
-                        name: { color: '#e6edf3', fontSize: 12 },
-                        pct: { color: null, fontSize: 12, fontWeight: 'bold' }
-                    },
-                    formatter: function(params) {
-                        // 富文本中pct颜色需要动态设置
-                        const idx = displaySectors.findIndex(s =>
-                            params.includes(s.name));
-                        if (idx >= 0) {
-                            const pct = displaySectors[idx].change_pct || 0;
-                            const pctColor = pct >= 0 ? '#f85149' : '#3fb950';
-                            return params.replace('{pct|', `{pct|color:${pctColor};`);
-                        }
-                        return params;
-                    }
+                    rich: richStyles
                 }
             },
             series: [{
@@ -573,6 +563,16 @@ const ChartRender = {
             tooltip: {
                 trigger: 'axis',
                 axisPointer: { type: 'cross' },
+                // tooltip始终在图表区域上下居中
+                position: function(point, params, dom, rect, size) {
+                    // point: 鼠标位置 [x, y]
+                    // size: {contentSize: [width, height], viewSize: [chartWidth, chartHeight]}
+                    const x = point[0] + 15;
+                    const y = (size.viewSize[1] - size.contentSize[1]) / 2;
+                    // 防止右侧溢出
+                    const maxX = size.viewSize[0] - size.contentSize[0] - 10;
+                    return [Math.min(x, maxX), Math.max(y, 10)];
+                },
                 formatter: function(params) {
                     if (!params || params.length === 0) return '';
                     let html = `<b>${params[0].axisValue}</b><br/>`;

@@ -11,12 +11,78 @@
     let selectedSectors = null; // 当前选中的板块（null=使用默认topN过滤）
 
     /**
+     * 获取当前板块类型对应的typeKey
+     * 'all' -> 'all', 'industry' -> 'industry', 'concept' -> 'concept'
+     */
+    function getTypeKey() {
+        return document.getElementById('sectorType').value;
+    }
+
+    /**
+     * 获取合并后的板块列表（全部模式下行概念同名板块加后缀区分）
+     * @returns {{all: string[], preset: string[]}}
+     */
+    function getMergedSectorList() {
+        const typeKey = getTypeKey();
+        if (typeKey !== 'all' || !sectorListData) {
+            return sectorListData?.[typeKey] || { all: [], preset: [] };
+        }
+        // 全部模式：合并行业+概念，同名时行业加"_行"后缀
+        const industryAll = sectorListData.industry?.all || [];
+        const conceptAll = sectorListData.concept?.all || [];
+        const industryPreset = sectorListData.industry?.preset || [];
+        const conceptPreset = sectorListData.concept?.preset || [];
+        const conceptSet = new Set(conceptAll);
+
+        const mergedAll = [];
+        const mergedPreset = [];
+        // 行业板块：与概念同名的加"_行"后缀
+        industryAll.forEach(name => {
+            const displayName = conceptSet.has(name) ? name + '_行' : name;
+            mergedAll.push(displayName);
+            if (industryPreset.includes(name)) mergedPreset.push(displayName);
+        });
+        // 概念板块：保持原名
+        conceptAll.forEach(name => {
+            mergedAll.push(name);
+            if (conceptPreset.includes(name)) mergedPreset.push(name);
+        });
+        return { all: mergedAll, preset: mergedPreset };
+    }
+
+    /**
+     * 将显示名称还原为原始板块名和类型
+     * "_行"后缀的为行业板块，否则优先查概念板块（概念板块数量更多）
+     * @param {string} displayName - 显示名称（可能带_行后缀）
+     * @returns {{name: string, type: string}} 原始名称和板块类型
+     */
+    function parseDisplayName(displayName) {
+        if (displayName.endsWith('_行')) {
+            return { name: displayName.slice(0, -2), type: 'industry' };
+        }
+        // 无后缀：优先查概念板块（概念板块数量通常更多）
+        const conceptAll = sectorListData?.concept?.all || [];
+        if (conceptAll.includes(displayName)) {
+            return { name: displayName, type: 'concept' };
+        }
+        return { name: displayName, type: 'industry' };
+    }
+
+    /**
      * 初始化应用
      */
     function init() {
         bindEvents();
-        loadSectorList();
-        loadData();
+        // 初始化分时图相关控件显示状态（默认选中分时图时需显示日期选择器）
+        const chartType = document.getElementById('chartType').value;
+        const isIntraday = chartType === 'intraday';
+        document.getElementById('dateGroup').style.display = isIntraday ? 'inline-flex' : 'none';
+        document.getElementById('intradayFullGroup').style.display = isIntraday ? 'inline-flex' : 'none';
+        if (isIntraday && !document.getElementById('intradayDate').value) {
+            document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
+        }
+        // 先加载板块列表，完成后再加载数据（确保板块过滤生效）
+        loadSectorList().then(() => loadData());
     }
 
     /**
@@ -94,11 +160,20 @@
                 }
 
                 if (!result || !result.success) {
-                    const sectorType = document.getElementById('sectorType').value;
+                    const sectorType = getTypeKey();
                     const topN = getTopNValue() === -1 ? 500 : (getTopNValue() || 30);
                     const selectedNames = getFilterParam();
-                    const data = await EastMoneyAPI.buildIntradayData(sectorType, topN, selectedNames);
-                    result = data ? { success: true } : { success: false, message: '东方财富API获取失败' };
+                    // "全部"模式分别获取行业和概念
+                    if (sectorType === 'all') {
+                        const [indResult, conResult] = await Promise.all([
+                            EastMoneyAPI.buildIntradayData('industry', topN, selectedNames),
+                            EastMoneyAPI.buildIntradayData('concept', topN, selectedNames)
+                        ]);
+                        result = (indResult || conResult) ? { success: true } : { success: false, message: '东方财富API获取失败' };
+                    } else {
+                        const data = await EastMoneyAPI.buildIntradayData(sectorType, topN, selectedNames);
+                        result = data ? { success: true } : { success: false, message: '东方财富API获取失败' };
+                    }
                 }
 
                 if (result.success) {
@@ -172,10 +247,10 @@
         const container = document.getElementById('sectorCheckboxes');
         if (!sectorListData) return;
 
-        const sectorType = document.getElementById('sectorType').value;
-        const typeKey = sectorType === 'industry' ? 'industry' : 'concept';
-        const allSectors = sectorListData[typeKey]?.all || [];
-        const presetSectors = sectorListData[typeKey]?.preset || [];
+        const typeKey = getTypeKey();
+        const mergedList = getMergedSectorList();
+        const allSectors = mergedList.all;
+        const presetSectors = mergedList.preset;
 
         // 从localStorage恢复上次选择
         const storageKey = `selectedSectors_${typeKey}`;
@@ -212,6 +287,11 @@
             });
             container.appendChild(label);
         });
+
+        // 如果localStorage中没有保存过选择，将当前勾选状态（预设或默认）存入localStorage
+        if (!saved) {
+            localStorage.setItem(`selectedSectors_${typeKey}`, JSON.stringify(checkedSectors));
+        }
     }
 
     /**
@@ -230,9 +310,8 @@
      */
     function selectPresetSectors() {
         if (!sectorListData) return;
-        const sectorType = document.getElementById('sectorType').value;
-        const typeKey = sectorType === 'industry' ? 'industry' : 'concept';
-        const presetSectors = sectorListData[typeKey]?.preset || [];
+        const mergedList = getMergedSectorList();
+        const presetSectors = mergedList.preset;
 
         const checkboxes = document.querySelectorAll('#sectorCheckboxes input[type="checkbox"]');
         checkboxes.forEach(cb => {
@@ -258,8 +337,7 @@
      * 保存板块选择到localStorage（实时保存）
      */
     function saveSectorSelection() {
-        const sectorType = document.getElementById('sectorType').value;
-        const typeKey = sectorType === 'industry' ? 'industry' : 'concept';
+        const typeKey = getTypeKey();
 
         const checkboxes = document.querySelectorAll('#sectorCheckboxes input[type="checkbox"]:checked');
         const selected = Array.from(checkboxes).map(cb => cb.value);
@@ -281,31 +359,55 @@
     }
 
     /**
-     * 导出已选择板块为JSON文件
+     * 导出已选择板块为JSON文件（同时包含行业和概念板块）
+     * "全部"模式下从selectedSectors_all中拆分出行业和概念
      */
     function exportSelectedSectors() {
-        const sectorType = document.getElementById('sectorType').value;
-        const typeKey = sectorType === 'industry' ? 'industry' : 'concept';
-        const storageKey = `selectedSectors_${typeKey}`;
-        const saved = localStorage.getItem(storageKey);
-        let selected;
-        if (saved) {
-            try { selected = JSON.parse(saved); } catch(e) { selected = []; }
-        } else {
-            selected = [];
+        let industrySectors = [];
+        let conceptSectors = [];
+
+        // 从各自的localStorage key读取
+        const industrySaved = localStorage.getItem('selectedSectors_industry');
+        const conceptSaved = localStorage.getItem('selectedSectors_concept');
+        if (industrySaved) {
+            try { industrySectors = JSON.parse(industrySaved); } catch(e) { industrySectors = []; }
+        }
+        if (conceptSaved) {
+            try { conceptSectors = JSON.parse(conceptSaved); } catch(e) { conceptSectors = []; }
+        }
+
+        // "全部"模式下，从selectedSectors_all拆分（覆盖上面的值，更准确）
+        const typeKey = getTypeKey();
+        if (typeKey === 'all') {
+            const allSaved = localStorage.getItem('selectedSectors_all');
+            if (allSaved) {
+                try {
+                    const allNames = JSON.parse(allSaved);
+                    industrySectors = [];
+                    conceptSectors = [];
+                    allNames.forEach(name => {
+                        const parsed = parseDisplayName(name);
+                        if (parsed.type === 'industry') {
+                            industrySectors.push(parsed.name);
+                        } else {
+                            conceptSectors.push(parsed.name);
+                        }
+                    });
+                } catch(e) {}
+            }
         }
 
         const exportData = {
             exportTime: new Date().toISOString(),
-            sectorType: typeKey,
-            selectedSectors: selected
+            industry: industrySectors,
+            concept: conceptSectors
         };
 
         const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `sector_selection_${typeKey}_${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `sector_selection_${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -318,7 +420,7 @@
     }
 
     /**
-     * 处理导入文件
+     * 处理导入文件（同时导入行业和概念板块）
      */
     function handleImportFile(event) {
         const file = event.target.files[0];
@@ -328,44 +430,76 @@
         reader.onload = function(e) {
             try {
                 const data = JSON.parse(e.target.result);
-                if (!data.selectedSectors || !Array.isArray(data.selectedSectors)) {
-                    alert('导入失败：文件格式不正确，缺少 selectedSectors 字段');
-                    return;
-                }
+                const currentTypeKey = getTypeKey();
+                let importedCount = 0;
+                let skippedCount = 0;
+                const types = ['industry', 'concept'];
 
-                const sectorType = document.getElementById('sectorType').value;
-                const typeKey = sectorType === 'industry' ? 'industry' : 'concept';
-
-                // 如果文件中的sectorType与当前不匹配，提示用户
-                if (data.sectorType && data.sectorType !== typeKey) {
-                    const typeName = data.sectorType === 'industry' ? '行业' : '概念';
-                    const currentTypeName = typeKey === 'industry' ? '行业' : '概念';
-                    if (!confirm(`导入的是${typeName}板块数据，当前是${currentTypeName}板块，是否继续？`)) {
-                        return;
+                // 兼容旧格式（只有selectedSectors字段）
+                if (data.selectedSectors && !data.industry && !data.concept) {
+                    const typeKey = data.sectorType || currentTypeKey;
+                    const allSectors = sectorListData[typeKey]?.all || [];
+                    const validSectors = data.selectedSectors.filter(name => allSectors.includes(name));
+                    if (validSectors.length > 0) {
+                        localStorage.setItem(`selectedSectors_${typeKey}`, JSON.stringify(validSectors));
+                        if (typeKey === currentTypeKey) selectedSectors = validSectors;
+                        importedCount += validSectors.length;
+                        skippedCount += data.selectedSectors.length - validSectors.length;
+                    }
+                } else {
+                    // 新格式：同时包含industry和concept
+                    for (const typeKey of types) {
+                        const sectors = data[typeKey];
+                        if (!sectors || !Array.isArray(sectors)) continue;
+                        const allSectors = sectorListData[typeKey]?.all || [];
+                        const validSectors = sectors.filter(name => allSectors.includes(name));
+                        if (validSectors.length > 0) {
+                            localStorage.setItem(`selectedSectors_${typeKey}`, JSON.stringify(validSectors));
+                            importedCount += validSectors.length;
+                            skippedCount += sectors.length - validSectors.length;
+                        }
+                    }
+                    // "全部"模式下还需构建selectedSectors_all（带_行后缀）
+                    if (currentTypeKey === 'all') {
+                        const allDisplayNames = [];
+                        const conceptAll = new Set(sectorListData?.concept?.all || []);
+                        for (const typeKey of types) {
+                            const sectors = data[typeKey];
+                            if (!sectors || !Array.isArray(sectors)) continue;
+                            const allSectors = sectorListData[typeKey]?.all || [];
+                            const validSectors = sectors.filter(name => allSectors.includes(name));
+                            validSectors.forEach(name => {
+                                if (typeKey === 'industry' && conceptAll.has(name)) {
+                                    allDisplayNames.push(name + '_行');
+                                } else {
+                                    allDisplayNames.push(name);
+                                }
+                            });
+                        }
+                        if (allDisplayNames.length > 0) {
+                            localStorage.setItem('selectedSectors_all', JSON.stringify(allDisplayNames));
+                            selectedSectors = allDisplayNames;
+                        }
+                    } else {
+                        // 单类型模式下更新当前选中
+                        const saved = localStorage.getItem(`selectedSectors_${currentTypeKey}`);
+                        if (saved) {
+                            try { selectedSectors = JSON.parse(saved); } catch(e) {}
+                        }
                     }
                 }
 
-                // 验证板块名称是否在当前列表中
-                const allSectors = sectorListData[typeKey]?.all || [];
-                const validSectors = data.selectedSectors.filter(name => allSectors.includes(name));
-                const invalidCount = data.selectedSectors.length - validSectors.length;
-
-                if (validSectors.length === 0) {
+                if (importedCount === 0) {
                     alert('导入失败：没有匹配的板块名称');
                     return;
                 }
 
-                // 保存到localStorage
-                const storageKey = `selectedSectors_${typeKey}`;
-                localStorage.setItem(storageKey, JSON.stringify(validSectors));
-                selectedSectors = validSectors;
-
                 // 重新渲染
                 renderSectorCheckboxes();
 
-                let msg = `成功导入 ${validSectors.length} 个板块`;
-                if (invalidCount > 0) {
-                    msg += `（${invalidCount} 个板块名称不匹配已忽略）`;
+                let msg = `成功导入 ${importedCount} 个板块（行业+概念）`;
+                if (skippedCount > 0) {
+                    msg += `（${skippedCount} 个板块名称不匹配已忽略）`;
                 }
                 alert(msg);
             } catch (err) {
@@ -387,14 +521,19 @@
 
     /**
      * 获取当前选中的板块名称列表
+     * 无localStorage时使用预设板块作为默认值
      */
     function getSelectedSectorNames() {
-        const sectorType = document.getElementById('sectorType').value;
-        const typeKey = sectorType === 'industry' ? 'industry' : 'concept';
+        const typeKey = getTypeKey();
         const storageKey = `selectedSectors_${typeKey}`;
         const saved = localStorage.getItem(storageKey);
         if (saved) {
             try { return JSON.parse(saved); } catch(e) { return null; }
+        }
+        // 无localStorage时，使用预设板块作为默认值
+        const mergedList = getMergedSectorList();
+        if (mergedList.preset.length > 0) {
+            return mergedList.preset;
         }
         return null;
     }
@@ -409,9 +548,10 @@
     /**
      * 加载数据并渲染图表
      * 优先使用东方财富API获取实时数据，本地JSON作为fallback
+     * "全部"模式下分别获取行业和概念数据后合并
      */
     async function loadData() {
-        const sectorType = document.getElementById('sectorType').value;
+        const sectorType = getTypeKey();
         const indicator = document.getElementById('indicator').value;
         const chartType = document.getElementById('chartType').value;
 
@@ -444,6 +584,65 @@
     }
 
     /**
+     * 合并行业和概念板块数据（用于"全部"模式）
+     * 同名板块：行业板块名称加"_行"后缀
+     * @param {Object} industryData - 行业板块数据
+     * @param {Object} conceptData - 概念板块数据
+     * @param {string} mergeField - 合并的板块数组字段名（sectors）
+     * @returns {Object} 合并后的数据
+     */
+    function mergeIndustryConceptData(industryData, conceptData) {
+        if (!industryData && !conceptData) return null;
+        if (!industryData) return conceptData;
+        if (!conceptData) return industryData;
+
+        // 收集概念板块名称集合，用于判断同名
+        const conceptNames = new Set((conceptData.sectors || []).map(s => s.name));
+
+        // 行业板块中与概念同名的加"_行"后缀
+        const industrySectors = (industryData.sectors || []).map(s => ({
+            ...s,
+            name: conceptNames.has(s.name) ? s.name + '_行' : s.name
+        }));
+
+        // 合并时间轴（分时图数据需要对齐）
+        let mergedTimes = conceptData.times || [];
+        const industryTimes = industryData.times || [];
+        if (mergedTimes.length === 0 && industryTimes.length > 0) {
+            mergedTimes = industryTimes;
+        } else if (industryTimes.length > 0) {
+            // 合并两个时间轴，取并集并排序
+            const timeSet = new Set([...mergedTimes, ...industryTimes]);
+            mergedTimes = [...timeSet].sort();
+            // 对齐行业板块数据到合并后的时间轴
+            industrySectors.forEach(sector => {
+                const indTimeMap = {};
+                (industryData.times || []).forEach((t, i) => {
+                    indTimeMap[t] = sector.data[i];
+                });
+                sector.data = mergedTimes.map(t => indTimeMap[t] !== undefined ? indTimeMap[t] : null);
+            });
+            // 对齐概念板块数据到合并后的时间轴
+            (conceptData.sectors || []).forEach((sector, idx) => {
+                const conTimeMap = {};
+                (conceptData.times || []).forEach((t, i) => {
+                    conTimeMap[t] = sector.data[i];
+                });
+                sector.data = mergedTimes.map(t => conTimeMap[t] !== undefined ? conTimeMap[t] : null);
+            });
+        }
+
+        const merged = {
+            ...conceptData,
+            times: mergedTimes,
+            sectors: [...industrySectors, ...(conceptData.sectors || [])],
+            sector_type: '全部板块',
+            update_time: industryData.update_time || conceptData.update_time
+        };
+        return merged;
+    }
+
+    /**
      * 根据板块配置过滤数据
      * topN="已选择板块"时只保留已选板块；topN为数字时截取前N个
      */
@@ -472,6 +671,36 @@
      * 历史日期：仅本地JSON（由GitHub Actions收盘后采集保存）
      */
     async function loadIntradayData(chartDom, sectorType) {
+        // "全部"模式：分别获取行业和概念数据后合并
+        if (sectorType === 'all') {
+            const [industryData, conceptData] = await Promise.all([
+                loadIntradayDataSingle(chartDom, 'industry'),
+                loadIntradayDataSingle(chartDom, 'concept')
+            ]);
+            const data = mergeIndustryConceptData(industryData, conceptData);
+            if (!data) {
+                chartDom.innerHTML = '<div style="text-align:center;padding:100px;color:#8b949e;">' +
+                    '<h2>暂无分时数据</h2><p>行业和概念数据均不可用</p></div>';
+                return;
+            }
+            const filteredData = filterDataBySectors(data);
+            adjustChartHeight(chartDom, filteredData, 'intraday');
+            currentChart = ChartRender.renderIntradayChart(chartDom, filteredData);
+            const timeStr = data.update_time || '';
+            const pointCount = data.times ? data.times.length : 0;
+            document.getElementById('updateTime').textContent =
+                `分时图 | ${data.date || ''} | ${pointCount}个采样点 | ${timeStr}`;
+            updateIntradaySummary(data);
+            return;
+        }
+        await loadIntradayDataSingle(chartDom, sectorType);
+    }
+
+    /**
+     * 加载单个板块类型的分时数据
+     * @returns {Promise<Object|null>} 分时数据对象，失败返回null
+     */
+    async function loadIntradayDataSingle(chartDom, sectorType) {
         let data = null;
         const selectedDate = document.getElementById('intradayDate').value || new Date().toISOString().slice(0, 10);
         const today = new Date().toISOString().slice(0, 10);
@@ -484,10 +713,10 @@
                 const selectedNames = getFilterParam();
                 data = await EastMoneyAPI.buildIntradayData(sectorType, topN, selectedNames);
                 if (data) {
-                    console.log('分时图数据来源: 东方财富API');
+                    console.log(`分时图数据来源(${sectorType}): 东方财富API`);
                 }
             } catch (err) {
-                console.warn('东方财富API获取分时数据失败，尝试本地JSON:', err);
+                console.warn(`东方财富API获取${sectorType}分时数据失败，尝试本地JSON:`, err);
             }
         }
 
@@ -496,41 +725,58 @@
             try {
                 const filename = `intraday_${sectorType}_${selectedDate}.json`;
                 data = await fetchJSON(CONFIG.dataPath + filename);
-                console.log(`分时图数据来源: 本地JSON (${selectedDate})`);
+                console.log(`分时图数据来源(${sectorType}): 本地JSON (${selectedDate})`);
             } catch (err) {
-                const hint = isToday
-                    ? '东方财富API和本地数据均不可用'
-                    : `${selectedDate} 无本地分时数据（仅保留近期数据）`;
-                chartDom.innerHTML = '<div style="text-align:center;padding:100px;color:#8b949e;">' +
-                    '<h2>暂无分时数据</h2>' +
-                    `<p>${hint}</p>` +
-                    '<p style="font-size:12px;margin-top:10px;">历史分时数据由每日收盘后自动采集</p></div>';
-                return;
+                return null;
             }
         }
 
-        // 应用板块过滤
-        const filteredData = filterDataBySectors(data);
-        // 分时图自适应高度
-        adjustChartHeight(chartDom, filteredData, 'intraday');
-        currentChart = ChartRender.renderIntradayChart(chartDom, filteredData);
-
-        // 更新时间和汇总
-        const timeStr = data.update_time || '';
-        const pointCount = data.times ? data.times.length : 0;
-        const sourceTag = data.source === 'eastmoney' ? ' [东方财富API]' : ' [本地数据]';
-        document.getElementById('updateTime').textContent =
-            `分时图 | ${data.date || ''} | ${pointCount}个采样点 | ${timeStr}${sourceTag}`;
-
-        // 分时图也更新汇总信息
-        updateIntradaySummary(data);
+        // 单类型模式：直接渲染
+        if (getTypeKey() !== 'all') {
+            const filteredData = filterDataBySectors(data);
+            adjustChartHeight(chartDom, filteredData, 'intraday');
+            currentChart = ChartRender.renderIntradayChart(chartDom, filteredData);
+            const timeStr = data.update_time || '';
+            const pointCount = data.times ? data.times.length : 0;
+            const sourceTag = data.source === 'eastmoney' ? ' [东方财富API]' : ' [本地数据]';
+            document.getElementById('updateTime').textContent =
+                `分时图 | ${data.date || ''} | ${pointCount}个采样点 | ${timeStr}${sourceTag}`;
+            updateIntradaySummary(data);
+        }
+        return data;
     }
 
     /**
-     * 加载实时排名数据（柱状图/热力图/桑基图）
+     * 加载实时排名数据（柱状图/热力图/桑基图/表格）
      * 优先使用东方财富API获取今日数据，fallback到本地JSON
+     * "全部"模式下分别获取行业和概念数据后合并
      */
     async function loadRealtimeData(chartDom, sectorType, indicator, chartType) {
+        // "全部"模式：分别获取行业和概念数据后合并
+        if (sectorType === 'all') {
+            const [industryData, conceptData] = await Promise.all([
+                loadRealtimeDataSingle('industry', indicator),
+                loadRealtimeDataSingle('concept', indicator)
+            ]);
+            const data = mergeIndustryConceptData(industryData, conceptData);
+            if (!data) throw new Error('行业和概念数据均不可用');
+            const filteredData = filterDataBySectors(data);
+            renderChart(chartDom, filteredData, chartType);
+            updateSummary(filteredData);
+            return;
+        }
+        const data = await loadRealtimeDataSingle(sectorType, indicator);
+        if (!data) throw new Error('数据加载失败');
+        const filteredData = filterDataBySectors(data);
+        renderChart(chartDom, filteredData, chartType);
+        updateSummary(filteredData);
+    }
+
+    /**
+     * 加载单个板块类型的实时排名数据
+     * @returns {Promise<Object|null>}
+     */
+    async function loadRealtimeDataSingle(sectorType, indicator) {
         let data = null;
 
         // 今日数据优先使用东方财富API
@@ -539,10 +785,10 @@
                 const selectedNames = getFilterParam();
                 data = await EastMoneyAPI.buildRealtimeData(sectorType, selectedNames);
                 if (data) {
-                    console.log('实时数据来源: 东方财富API');
+                    console.log(`实时数据来源(${sectorType}): 东方财富API`);
                 }
             } catch (err) {
-                console.warn('东方财富API获取实时数据失败，尝试本地JSON:', err);
+                console.warn(`东方财富API获取${sectorType}实时数据失败，尝试本地JSON:`, err);
             }
         }
 
@@ -557,16 +803,12 @@
                     filename = `realtime_${sectorType}_${indicator}.json`;
                 }
                 data = await fetchJSON(CONFIG.dataPath + filename);
-                console.log('实时数据来源: 本地JSON');
+                console.log(`实时数据来源(${sectorType}): 本地JSON`);
             } catch (err) {
-                throw err;
+                return null;
             }
         }
-
-        // 应用板块过滤
-        const filteredData = filterDataBySectors(data);
-        renderChart(chartDom, filteredData, chartType);
-        updateSummary(filteredData);
+        return data;
     }
 
     /**
@@ -601,14 +843,27 @@
 
     /**
      * 加载Bar Race数据
+     * "全部"模式下合并行业和概念数据
      */
     async function loadBarRaceData(chartDom, sectorType) {
         try {
-            const filename = `bar_race_${sectorType}.json`;
-            const data = await fetchJSON(CONFIG.dataPath + filename);
-            currentChart = ChartRender.renderBarRace(chartDom, data);
-            document.getElementById('updateTime').textContent =
-                `动态排行 | 共${data.dates ? data.dates.length : 0}天数据 | 点击暂停/播放`;
+            if (sectorType === 'all') {
+                const [industryData, conceptData] = await Promise.all([
+                    fetchJSON(CONFIG.dataPath + 'bar_race_industry.json').catch(() => null),
+                    fetchJSON(CONFIG.dataPath + 'bar_race_concept.json').catch(() => null)
+                ]);
+                const data = mergeIndustryConceptData(industryData, conceptData);
+                if (!data) throw new Error('无数据');
+                currentChart = ChartRender.renderBarRace(chartDom, data);
+                document.getElementById('updateTime').textContent =
+                    `动态排行 | 共${data.dates ? data.dates.length : 0}天数据 | 点击暂停/播放`;
+            } else {
+                const filename = `bar_race_${sectorType}.json`;
+                const data = await fetchJSON(CONFIG.dataPath + filename);
+                currentChart = ChartRender.renderBarRace(chartDom, data);
+                document.getElementById('updateTime').textContent =
+                    `动态排行 | 共${data.dates ? data.dates.length : 0}天数据 | 点击暂停/播放`;
+            }
         } catch (err) {
             chartDom.innerHTML = '<div style="text-align:center;padding:100px;color:#8b949e;">' +
                 '<h2>暂无Bar Race数据</h2>' +
