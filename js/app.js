@@ -962,8 +962,8 @@
             // 表格：每行约32px + 表头40px + 标题30px + 边距
             height = Math.max(400, sectorCount * 32 + 120);
         } else {
-            // 分时图等：默认高度
-            height = 600;
+            // 分时图等：默认高度（调高20%）
+            height = 720;
         }
 
         chartDom.style.height = height + 'px';
