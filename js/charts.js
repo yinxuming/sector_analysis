@@ -537,12 +537,12 @@ const ChartRender = {
                             `{val|${valStr}亿} `,
                             `{turnover|${turnoverYi.toFixed(1)}亿}`
                         ].join(''),
-                        fontSize: 10,
+                        fontSize: 9,
                         rich: {
-                            name: { color: '#e6edf3',  fontWeight: 'normal' },
-                            pct: { color: pctColor },
-                            val: { color: valColor},
-                            turnover: { color: '#58a6ff' }
+                            name: { color: '#e6edf3', fontSize: 9, fontWeight: 'normal' },
+                            pct: { color: pctColor, fontSize: 9, fontWeight: 'normal' },
+                            val: { color: valColor, fontSize: 9, fontWeight: 'normal' },
+                            turnover: { color: '#58a6ff', fontSize: 9 }
                         },
                         offset: [0, labelOffsets[index]]
                     },
