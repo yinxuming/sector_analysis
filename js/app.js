@@ -73,12 +73,13 @@
      */
     function init() {
         bindEvents();
-        // 初始化分时图相关控件显示状态（默认选中分时图时需显示日期选择器）
+        // 初始化日期选择器：动态排行不需要，其他图表都显示
         const chartType = document.getElementById('chartType').value;
+        const isBarRace = chartType === 'barRace';
+        document.getElementById('dateGroup').style.display = isBarRace ? 'none' : 'inline-flex';
         const isIntraday = chartType === 'intraday';
-        document.getElementById('dateGroup').style.display = isIntraday ? 'inline-flex' : 'none';
         document.getElementById('intradayFullGroup').style.display = isIntraday ? 'inline-flex' : 'none';
-        if (isIntraday && !document.getElementById('intradayDate').value) {
+        if (!isBarRace && !document.getElementById('intradayDate').value) {
             document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
         }
         // 先加载板块列表，完成后再加载数据（确保板块过滤生效）
@@ -96,18 +97,34 @@
         });
         document.getElementById('indicator').addEventListener('change', loadData);
         document.getElementById('chartType').addEventListener('change', function() {
-            // 分时图模式下显示日期选择器和获取完整分时按钮，其他模式隐藏
+            // 动态排行不需要日期选择器（需要多日数据），其他图表都显示
+            const isBarRace = this.value === 'barRace';
+            document.getElementById('dateGroup').style.display = isBarRace ? 'none' : 'inline-flex';
+            // 获取完整分时按钮仅分时图显示
             const isIntraday = this.value === 'intraday';
-            document.getElementById('dateGroup').style.display = isIntraday ? '' : 'none';
-            document.getElementById('intradayFullGroup').style.display = isIntraday ? '' : 'none';
-            // 切换到分时图时，默认日期为今天
-            if (isIntraday && !document.getElementById('intradayDate').value) {
+            document.getElementById('intradayFullGroup').style.display = isIntraday ? 'inline-flex' : 'none';
+            // 切换图表时，默认日期为今天
+            if (!isBarRace && !document.getElementById('intradayDate').value) {
                 document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
             }
+            // 时间指标在动态排行模式下隐藏（不需要）
+            document.getElementById('indicator').parentElement.style.display = isBarRace ? 'none' : 'inline-flex';
             loadData();
         });
         document.getElementById('topN').addEventListener('change', loadData);
-        document.getElementById('intradayDate').addEventListener('change', loadData);
+        document.getElementById('intradayDate').addEventListener('change', function() {
+            // 历史日期下，时间指标强制为"今日"并禁用（历史数据只有当日数据）
+            const selectedDate = this.value || new Date().toISOString().slice(0, 10);
+            const today = new Date().toISOString().slice(0, 10);
+            const indicatorSelect = document.getElementById('indicator');
+            if (selectedDate !== today) {
+                indicatorSelect.value = '今日';
+                indicatorSelect.disabled = true;
+            } else {
+                indicatorSelect.disabled = false;
+            }
+            loadData();
+        });
         document.getElementById('btnRefresh').addEventListener('click', loadData);
 
         // 获取完整分时数据按钮
@@ -679,8 +696,15 @@
             ]);
             const data = mergeIndustryConceptData(industryData, conceptData);
             if (!data) {
+                const selectedDate = document.getElementById('intradayDate').value || new Date().toISOString().slice(0, 10);
+                const today = new Date().toISOString().slice(0, 10);
+                const hint = selectedDate === today
+                    ? '东方财富API和本地数据均不可用'
+                    : `${selectedDate} 无本地分时数据（仅保留近期数据）`;
                 chartDom.innerHTML = '<div style="text-align:center;padding:100px;color:#8b949e;">' +
-                    '<h2>暂无分时数据</h2><p>行业和概念数据均不可用</p></div>';
+                    '<h2>暂无分时数据</h2>' +
+                    `<p>${hint}</p>` +
+                    '<p style="font-size:12px;margin-top:10px;">历史分时数据由每日收盘后自动采集</p></div>';
                 return;
             }
             const filteredData = filterDataBySectors(data);
@@ -727,6 +751,7 @@
                 data = await fetchJSON(CONFIG.dataPath + filename);
                 console.log(`分时图数据来源(${sectorType}): 本地JSON (${selectedDate})`);
             } catch (err) {
+                console.warn(`本地分时数据加载失败(${sectorType}, ${selectedDate}):`, err.message);
                 return null;
             }
         }
@@ -748,15 +773,20 @@
 
     /**
      * 加载实时排名数据（柱状图/热力图/桑基图/表格）
-     * 优先使用东方财富API获取今日数据，fallback到本地JSON
+     * 今日：优先东方财富API，fallback本地JSON
+     * 历史日期：从分时数据文件提取最终值作为该日期的排名数据
      * "全部"模式下分别获取行业和概念数据后合并
      */
     async function loadRealtimeData(chartDom, sectorType, indicator, chartType) {
+        const selectedDate = document.getElementById('intradayDate').value || new Date().toISOString().slice(0, 10);
+        const today = new Date().toISOString().slice(0, 10);
+        const isToday = selectedDate === today;
+
         // "全部"模式：分别获取行业和概念数据后合并
         if (sectorType === 'all') {
             const [industryData, conceptData] = await Promise.all([
-                loadRealtimeDataSingle('industry', indicator),
-                loadRealtimeDataSingle('concept', indicator)
+                loadRealtimeDataSingle('industry', indicator, isToday),
+                loadRealtimeDataSingle('concept', indicator, isToday)
             ]);
             const data = mergeIndustryConceptData(industryData, conceptData);
             if (!data) throw new Error('行业和概念数据均不可用');
@@ -765,7 +795,7 @@
             updateSummary(filteredData);
             return;
         }
-        const data = await loadRealtimeDataSingle(sectorType, indicator);
+        const data = await loadRealtimeDataSingle(sectorType, indicator, isToday);
         if (!data) throw new Error('数据加载失败');
         const filteredData = filterDataBySectors(data);
         renderChart(chartDom, filteredData, chartType);
@@ -774,13 +804,16 @@
 
     /**
      * 加载单个板块类型的实时排名数据
+     * @param {string} sectorType - 板块类型
+     * @param {string} indicator - 时间指标
+     * @param {boolean} isToday - 是否为今天
      * @returns {Promise<Object|null>}
      */
-    async function loadRealtimeDataSingle(sectorType, indicator) {
+    async function loadRealtimeDataSingle(sectorType, indicator, isToday) {
         let data = null;
 
         // 今日数据优先使用东方财富API
-        if (indicator === '今日') {
+        if (isToday && indicator === '今日') {
             try {
                 const selectedNames = getFilterParam();
                 data = await EastMoneyAPI.buildRealtimeData(sectorType, selectedNames);
@@ -795,20 +828,56 @@
         // Fallback: 本地JSON数据
         if (!data) {
             try {
-                let filename;
-                if (indicator === '一周') {
-                    const today = new Date().toISOString().slice(0, 10);
-                    filename = `weekly_${sectorType}_${today}.json`;
+                if (isToday) {
+                    // 今天：读取实时/一周数据文件
+                    let filename;
+                    if (indicator === '一周') {
+                        const today = new Date().toISOString().slice(0, 10);
+                        filename = `weekly_${sectorType}_${today}.json`;
+                    } else {
+                        filename = `realtime_${sectorType}_${indicator}.json`;
+                    }
+                    data = await fetchJSON(CONFIG.dataPath + filename);
+                    console.log(`实时数据来源(${sectorType}): 本地JSON`);
                 } else {
-                    filename = `realtime_${sectorType}_${indicator}.json`;
+                    // 历史日期：从分时数据文件提取最终值作为该日期的排名数据
+                    const selectedDate = document.getElementById('intradayDate').value;
+                    const filename = `intraday_${sectorType}_${selectedDate}.json`;
+                    const intradayData = await fetchJSON(CONFIG.dataPath + filename);
+                    data = convertIntradayToRealtime(intradayData, selectedDate);
+                    console.log(`实时数据来源(${sectorType}): 本地分时JSON (${selectedDate})`);
                 }
-                data = await fetchJSON(CONFIG.dataPath + filename);
-                console.log(`实时数据来源(${sectorType}): 本地JSON`);
             } catch (err) {
+                console.warn(`本地数据加载失败(${sectorType}):`, err.message);
                 return null;
             }
         }
         return data;
+    }
+
+    /**
+     * 将分时数据转换为实时排名数据格式
+     * 提取每个板块的final_value作为净流入，并构建sectors数组
+     * @param {Object} intradayData - 分时数据
+     * @param {string} date - 日期
+     * @returns {Object} 实时排名格式数据
+     */
+    function convertIntradayToRealtime(intradayData, date) {
+        const sectors = (intradayData.sectors || []).map(s => ({
+            name: s.name,
+            main_net_inflow: s.final_value || 0,
+            change_percent: s.change_percent || 0,
+            turnover: s.turnover || 0,
+            main_net_inflow_pct: s.turnover ? ((s.final_value || 0) / s.turnover * 100) : 0
+        }));
+        return {
+            update_time: intradayData.update_time || '',
+            date: date,
+            indicator: '今日',
+            sector_type: intradayData.sector_type || '',
+            sectors: sectors,
+            source: 'intraday_convert'
+        };
     }
 
     /**
