@@ -14,6 +14,9 @@ const CONFIG = {
     // 备用代理（主代理失败时自动切换）
     apiProxyBackup: 'https://vercel-proxy-p.vercel.app',
 
+    // 数据刷新阈值（毫秒）：页面从不可见到可见时，超过此间隔自动刷新
+    refreshThreshold: 5 * 60 * 1000,  // 5分钟
+
     // 默认配置
     defaults: {
         sectorType: 'concept',

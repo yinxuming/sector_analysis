@@ -9,6 +9,7 @@
     let currentChart = null;
     let sectorListData = null;  // 板块列表数据缓存
     let selectedSectors = null; // 当前选中的板块（null=使用默认topN过滤）
+    let lastRefreshTime = 0;    // 上次刷新数据的时间戳（毫秒）
 
     /**
      * 获取当前板块类型对应的typeKey
@@ -148,6 +149,22 @@
         document.getElementById('btnImport').addEventListener('click', importSelectedSectors);
         document.getElementById('importFile').addEventListener('change', handleImportFile);
         document.getElementById('sectorSearch').addEventListener('input', filterSectors);
+
+        // 页面可见性变化监听：从不可见到可见时，超过阈值自动刷新
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                const now = Date.now();
+                const elapsed = now - lastRefreshTime;
+                // 仅当日实时数据（今天 + 今日指标）才自动刷新
+                const selectedDate = document.getElementById('intradayDate').value || new Date().toISOString().slice(0, 10);
+                const today = new Date().toISOString().slice(0, 10);
+                const indicator = document.getElementById('indicator').value;
+                if (selectedDate === today && indicator === '今日' && elapsed > CONFIG.refreshThreshold) {
+                    console.log(`页面可见，距离上次刷新${Math.round(elapsed/1000)}秒，超过阈值${CONFIG.refreshThreshold/1000}秒，自动刷新`);
+                    loadData();
+                }
+            }
+        });
     }
 
     /**
@@ -568,6 +585,9 @@
      * "全部"模式下分别获取行业和概念数据后合并
      */
     async function loadData() {
+        // 记录刷新时间
+        lastRefreshTime = Date.now();
+
         const sectorType = getTypeKey();
         const indicator = document.getElementById('indicator').value;
         const chartType = document.getElementById('chartType').value;
