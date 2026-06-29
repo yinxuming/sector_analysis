@@ -151,6 +151,7 @@
         document.getElementById('sectorSearch').addEventListener('input', filterSectors);
 
         // 页面可见性变化监听：从不可见到可见时，超过阈值自动刷新
+        // preserveOldChart=true：保留旧图表直到新数据就绪，避免长时间后台后切换可见出现空白
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'visible') {
                 const now = Date.now();
@@ -160,8 +161,8 @@
                 const today = new Date().toISOString().slice(0, 10);
                 const indicator = document.getElementById('indicator').value;
                 if (selectedDate === today && indicator === '今日' && elapsed > CONFIG.refreshThreshold) {
-                    console.log(`页面可见，距离上次刷新${Math.round(elapsed/1000)}秒，超过阈值${CONFIG.refreshThreshold/1000}秒，自动刷新`);
-                    loadData();
+                    console.log(`页面可见，距离上次刷新${Math.round(elapsed/1000)}秒，超过阈值${CONFIG.refreshThreshold/1000}秒，自动刷新（保留旧图表）`);
+                    loadData(true);
                 }
             }
         });
@@ -583,8 +584,9 @@
      * 加载数据并渲染图表
      * 优先使用东方财富API获取实时数据，本地JSON作为fallback
      * "全部"模式下分别获取行业和概念数据后合并
+     * @param {boolean} preserveOldChart - 是否保留旧图表直到新数据就绪（用于页面可见性刷新，避免空白）
      */
-    async function loadData() {
+    async function loadData(preserveOldChart = false) {
         // 记录刷新时间
         lastRefreshTime = Date.now();
 
@@ -594,8 +596,9 @@
 
         const chartDom = document.getElementById('mainChart');
 
-        // 销毁旧图表
-        if (currentChart) {
+        // 仅在不保留旧图表时立即销毁（原行为，用于切换图表类型/指标等场景）
+        // preserveOldChart=true时延迟到渲染前才销毁，避免数据加载期间出现空白
+        if (!preserveOldChart && currentChart) {
             currentChart.dispose();
             currentChart = null;
         }
@@ -613,10 +616,19 @@
             }
         } catch (err) {
             console.error('数据加载失败:', err);
-            chartDom.innerHTML = '<div style="text-align:center;padding:100px;color:#8b949e;">' +
-                '<h2>数据加载失败</h2>' +
-                '<p>请先运行 Python 脚本生成数据文件</p>' +
-                '<p style="font-size:12px;margin-top:10px;">python main.py --export</p></div>';
+            if (preserveOldChart && currentChart) {
+                // 保留旧图表，仅在更新时间区域提示错误，避免覆盖现有显示
+                console.warn('保留旧图表数据显示，数据刷新失败');
+                const updateTimeEl = document.getElementById('updateTime');
+                if (updateTimeEl) {
+                    updateTimeEl.textContent = `数据刷新失败，显示旧数据: ${err.message}`;
+                }
+            } else {
+                chartDom.innerHTML = '<div style="text-align:center;padding:100px;color:#8b949e;">' +
+                    '<h2>数据加载失败</h2>' +
+                    '<p>请先运行 Python 脚本生成数据文件</p>' +
+                    '<p style="font-size:12px;margin-top:10px;">python main.py --export</p></div>';
+            }
         }
     }
 
