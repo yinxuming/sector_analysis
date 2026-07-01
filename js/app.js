@@ -82,7 +82,6 @@
         document.getElementById('dateGroup').style.display = isBarRace ? 'none' : 'inline-flex';
         const isIntraday = chartType === 'intraday';
         document.getElementById('intradayFullGroup').style.display = isIntraday ? 'inline-flex' : 'none';
-        updateRefreshIntervalVisibility();
         if (!isBarRace && !document.getElementById('intradayDate').value) {
             document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
         }
@@ -112,10 +111,9 @@
             // 动态排行不需要日期选择器（需要多日数据），其他图表都显示
             const isBarRace = this.value === 'barRace';
             document.getElementById('dateGroup').style.display = isBarRace ? 'none' : 'inline-flex';
-            // 获取完整分时按钮和刷新间隔仅分时图显示
+            // 获取完整分时按钮仅分时图显示
             const isIntraday = this.value === 'intraday';
             document.getElementById('intradayFullGroup').style.display = isIntraday ? 'inline-flex' : 'none';
-            updateRefreshIntervalVisibility();
             // 切换图表时，默认日期为今天
             if (!isBarRace && !document.getElementById('intradayDate').value) {
                 document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
@@ -152,8 +150,17 @@
         // 获取完整分时数据按钮
         document.getElementById('btnIntradayFull').addEventListener('click', handleIntradayFull);
 
-        // 板块配置面板
-        document.getElementById('btnConfig').addEventListener('click', toggleConfigPanel);
+        // 设置面板
+        document.getElementById('btnSettings').addEventListener('click', toggleSettingsPanel);
+        document.getElementById('btnCloseSettings').addEventListener('click', function() {
+            document.getElementById('settingsPanel').style.display = 'none';
+        });
+
+        // 板块配置面板（按钮在设置面板内，点击打开板块配置并关闭设置面板）
+        document.getElementById('btnConfig').addEventListener('click', function() {
+            document.getElementById('settingsPanel').style.display = 'none';
+            toggleConfigPanel();
+        });
         document.getElementById('btnCloseConfig').addEventListener('click', function() {
             document.getElementById('configPanel').style.display = 'none';
         });
@@ -724,12 +731,11 @@
     }
 
     /**
-     * 根据当前图表类型显示/隐藏刷新间隔控件
+     * 切换设置面板显示
      */
-    function updateRefreshIntervalVisibility() {
-        const chartType = document.getElementById('chartType').value;
-        const isIntraday = chartType === 'intraday';
-        document.getElementById('intradayRefreshGroup').style.display = isIntraday ? 'inline-flex' : 'none';
+    function toggleSettingsPanel() {
+        const panel = document.getElementById('settingsPanel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
     }
 
     /**

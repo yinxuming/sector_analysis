@@ -62,18 +62,35 @@
             <div class="control-group" id="intradayFullGroup" style="display:none;">
                 <button class="btn-intraday-full" id="btnIntradayFull" title="从东方财富API获取当天完整分时数据（240个采样点）">获取完整分时</button>
             </div>
-            <div class="control-group" id="intradayRefreshGroup" style="display:none;">
-                <label>刷新间隔：</label>
-                <select id="intradayRefreshInterval" title="分时图自动刷新间隔（页面可见时生效）">
-                    <option value="0">关闭</option>
-                    <option value="15">15秒</option>
-                    <option value="30" selected>30秒</option>
-                    <option value="60">1分钟</option>
-                    <option value="300">5分钟</option>
-                </select>
-            </div>
             <button class="btn-refresh" id="btnRefresh">刷新数据</button>
-            <button class="btn-config" id="btnConfig">板块配置</button>
+            <!-- 设置齿轮图标：固定到面板右上角顶部，点击弹出设置面板 -->
+            <button class="btn-settings" id="btnSettings" title="设置">⚙️</button>
+        </div>
+
+        <!-- 设置面板（默认隐藏） -->
+        <div class="settings-panel" id="settingsPanel" style="display:none;">
+            <div class="settings-header">
+                <h3>设置</h3>
+                <button class="btn-close-settings" id="btnCloseSettings">关闭</button>
+            </div>
+            <div class="settings-content">
+                <div class="settings-item">
+                    <label for="intradayRefreshInterval">分时图自动刷新间隔：</label>
+                    <select id="intradayRefreshInterval" title="分时图自动刷新间隔（页面可见时生效）">
+                        <option value="0">关闭</option>
+                        <option value="15">15秒</option>
+                        <option value="30" selected>30秒</option>
+                        <option value="60">1分钟</option>
+                        <option value="300">5分钟</option>
+                    </select>
+                    <span class="settings-hint">仅分时图+今日数据生效，页面隐藏时自动暂停</span>
+                </div>
+                <div class="settings-item">
+                    <label>板块配置：</label>
+                    <button class="btn-config" id="btnConfig">打开板块配置</button>
+                    <span class="settings-hint">配置需要显示/关注的板块列表</span>
+                </div>
+            </div>
         </div>
 
         <!-- 板块配置面板（默认隐藏） -->
