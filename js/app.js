@@ -10,6 +10,8 @@
     let sectorListData = null;  // 板块列表数据缓存
     let selectedSectors = null; // 当前选中的板块（null=使用默认topN过滤）
     let lastRefreshTime = 0;    // 上次刷新数据的时间戳（毫秒）
+    let intradayRefreshTimer = null;  // 分时图自动刷新定时器
+    let isLoading = false;      // 数据加载中标志，防止自动刷新与手动刷新重叠
 
     /**
      * 获取当前板块类型对应的typeKey
@@ -80,11 +82,16 @@
         document.getElementById('dateGroup').style.display = isBarRace ? 'none' : 'inline-flex';
         const isIntraday = chartType === 'intraday';
         document.getElementById('intradayFullGroup').style.display = isIntraday ? 'inline-flex' : 'none';
+        updateRefreshIntervalVisibility();
         if (!isBarRace && !document.getElementById('intradayDate').value) {
             document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
         }
         // 先加载板块列表，完成后再加载数据（确保板块过滤生效）
-        loadSectorList().then(() => loadData());
+        loadSectorList().then(() => {
+            loadData();
+            // 初始数据加载后启动分时图自动刷新
+            startIntradayAutoRefresh();
+        });
     }
 
     /**
@@ -96,14 +103,19 @@
             loadSectorList();
             loadData();
         });
-        document.getElementById('indicator').addEventListener('change', loadData);
+        document.getElementById('indicator').addEventListener('change', function() {
+            loadData();
+            // 指标变化后重新评估自动刷新
+            startIntradayAutoRefresh();
+        });
         document.getElementById('chartType').addEventListener('change', function() {
             // 动态排行不需要日期选择器（需要多日数据），其他图表都显示
             const isBarRace = this.value === 'barRace';
             document.getElementById('dateGroup').style.display = isBarRace ? 'none' : 'inline-flex';
-            // 获取完整分时按钮仅分时图显示
+            // 获取完整分时按钮和刷新间隔仅分时图显示
             const isIntraday = this.value === 'intraday';
             document.getElementById('intradayFullGroup').style.display = isIntraday ? 'inline-flex' : 'none';
+            updateRefreshIntervalVisibility();
             // 切换图表时，默认日期为今天
             if (!isBarRace && !document.getElementById('intradayDate').value) {
                 document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
@@ -111,6 +123,8 @@
             // 时间指标在动态排行模式下隐藏（不需要）
             document.getElementById('indicator').parentElement.style.display = isBarRace ? 'none' : 'inline-flex';
             loadData();
+            // 图表类型变化后重新评估自动刷新
+            startIntradayAutoRefresh();
         });
         document.getElementById('topN').addEventListener('change', loadData);
         document.getElementById('intradayDate').addEventListener('change', function() {
@@ -125,6 +139,13 @@
                 indicatorSelect.disabled = false;
             }
             loadData();
+            // 日期变化后重新评估自动刷新（历史日期不自动刷新）
+            startIntradayAutoRefresh();
+        });
+        // 分时图自动刷新间隔选择
+        document.getElementById('intradayRefreshInterval').addEventListener('change', function() {
+            console.log(`刷新间隔变更为: ${this.value}秒`);
+            startIntradayAutoRefresh();
         });
         document.getElementById('btnRefresh').addEventListener('click', loadData);
 
@@ -150,8 +171,9 @@
         document.getElementById('importFile').addEventListener('change', handleImportFile);
         document.getElementById('sectorSearch').addEventListener('input', filterSectors);
 
-        // 页面可见性变化监听：从不可见到可见时，超过阈值自动刷新
-        // preserveOldChart=true：保留旧图表直到新数据就绪，避免长时间后台后切换可见出现空白
+        // 页面可见性变化监听
+        // 1. 从不可见到可见时，超过阈值自动刷新（保留旧图表避免空白）
+        // 2. 可见→隐藏：停止自动刷新定时器；隐藏→可见：恢复自动刷新
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'visible') {
                 const now = Date.now();
@@ -164,6 +186,11 @@
                     console.log(`页面可见，距离上次刷新${Math.round(elapsed/1000)}秒，超过阈值${CONFIG.refreshThreshold/1000}秒，自动刷新（保留旧图表）`);
                     loadData(true);
                 }
+                // 恢复分时图自动刷新
+                startIntradayAutoRefresh();
+            } else {
+                // 页面隐藏时停止自动刷新，节省资源
+                stopIntradayAutoRefresh();
             }
         });
     }
@@ -214,6 +241,8 @@
                 if (result.success) {
                     btn.textContent = '获取成功';
                     btn.classList.add('success');
+                    // 清除前端缓存，确保loadData从API/本地JSON获取最新数据
+                    clearIntradayCache(selectedDate);
                     loadData();
                     setTimeout(() => {
                         btn.disabled = false;
@@ -580,6 +609,129 @@
         return getTopNValue() === -1 ? getSelectedSectorNames() : null;
     }
 
+    // ========== 分时数据前端缓存（localStorage） ==========
+    // 当日已从东方财富API获取的分时数据缓存到localStorage，避免频繁请求API
+    // 缓存TTL由CONFIG.intradayCacheTTL控制（默认60秒）
+
+    /**
+     * 获取分时数据缓存的localStorage key
+     * @param {string} sectorType - 板块类型
+     * @param {string} date - 日期
+     * @returns {string} cache key
+     */
+    function getIntradayCacheKey(sectorType, date) {
+        return `intraday_cache_${sectorType}_${date}`;
+    }
+
+    /**
+     * 保存分时数据到localStorage缓存
+     * @param {string} sectorType - 板块类型
+     * @param {string} date - 日期
+     * @param {Object} data - 分时数据
+     */
+    function saveIntradayCache(sectorType, date, data) {
+        try {
+            const cacheKey = getIntradayCacheKey(sectorType, date);
+            const cacheEntry = {
+                data: data,
+                timestamp: Date.now(),
+                ttl: CONFIG.intradayCacheTTL * 1000
+            };
+            localStorage.setItem(cacheKey, JSON.stringify(cacheEntry));
+            console.log(`分时数据已缓存: ${sectorType} ${date}`);
+        } catch (e) {
+            console.warn('缓存分时数据失败:', e.message);
+        }
+    }
+
+    /**
+     * 从localStorage读取分时数据缓存（未过期才返回）
+     * @param {string} sectorType - 板块类型
+     * @param {string} date - 日期
+     * @returns {Object|null} 缓存的数据，无缓存或已过期返回null
+     */
+    function loadIntradayCache(sectorType, date) {
+        try {
+            const cacheKey = getIntradayCacheKey(sectorType, date);
+            const raw = localStorage.getItem(cacheKey);
+            if (!raw) return null;
+            const entry = JSON.parse(raw);
+            const elapsed = Date.now() - entry.timestamp;
+            if (elapsed > entry.ttl) {
+                console.log(`缓存已过期(${Math.round(elapsed/1000)}秒): ${sectorType} ${date}`);
+                localStorage.removeItem(cacheKey);
+                return null;
+            }
+            console.log(`命中缓存(${Math.round(elapsed/1000)}秒前): ${sectorType} ${date}`);
+            return entry.data;
+        } catch (e) {
+            console.warn('读取分时缓存失败:', e.message);
+            return null;
+        }
+    }
+
+    /**
+     * 清除指定日期的分时数据缓存（获取完整分时数据后调用，确保刷新使用新数据）
+     * @param {string} date - 日期，默认今天
+     */
+    function clearIntradayCache(date) {
+        const targetDate = date || new Date().toISOString().slice(0, 10);
+        ['industry', 'concept'].forEach(sectorType => {
+            const cacheKey = getIntradayCacheKey(sectorType, targetDate);
+            localStorage.removeItem(cacheKey);
+        });
+        console.log(`已清除${targetDate}的分时数据缓存`);
+    }
+
+    // ========== 分时图自动刷新管理 ==========
+
+    /**
+     * 启动分时图自动刷新定时器
+     * 仅在分时图模式 + 当日 + 页面可见时启动
+     */
+    function startIntradayAutoRefresh() {
+        stopIntradayAutoRefresh();
+        const chartType = document.getElementById('chartType').value;
+        const selectedDate = document.getElementById('intradayDate').value || new Date().toISOString().slice(0, 10);
+        const today = new Date().toISOString().slice(0, 10);
+        const indicator = document.getElementById('indicator').value;
+        // 仅分时图 + 今日 + 今日指标才自动刷新
+        if (chartType !== 'intraday' || selectedDate !== today || indicator !== '今日') {
+            return;
+        }
+        const intervalSeconds = parseInt(document.getElementById('intradayRefreshInterval').value) || 0;
+        if (intervalSeconds <= 0) {
+            return;
+        }
+        console.log(`启动分时图自动刷新，间隔${intervalSeconds}秒`);
+        intradayRefreshTimer = setInterval(() => {
+            // 页面不可见时跳过刷新（visibilitychange会单独处理）
+            if (document.visibilityState !== 'visible') return;
+            console.log('分时图自动刷新触发');
+            loadData(true);
+        }, intervalSeconds * 1000);
+    }
+
+    /**
+     * 停止分时图自动刷新定时器
+     */
+    function stopIntradayAutoRefresh() {
+        if (intradayRefreshTimer) {
+            clearInterval(intradayRefreshTimer);
+            intradayRefreshTimer = null;
+            console.log('分时图自动刷新已停止');
+        }
+    }
+
+    /**
+     * 根据当前图表类型显示/隐藏刷新间隔控件
+     */
+    function updateRefreshIntervalVisibility() {
+        const chartType = document.getElementById('chartType').value;
+        const isIntraday = chartType === 'intraday';
+        document.getElementById('intradayRefreshGroup').style.display = isIntraday ? 'inline-flex' : 'none';
+    }
+
     /**
      * 加载数据并渲染图表
      * 优先使用东方财富API获取实时数据，本地JSON作为fallback
@@ -587,6 +739,12 @@
      * @param {boolean} preserveOldChart - 是否保留旧图表直到新数据就绪（用于页面可见性刷新，避免空白）
      */
     async function loadData(preserveOldChart = false) {
+        // 防止自动刷新与手动刷新重叠
+        if (isLoading) {
+            console.log('数据正在加载中，跳过本次刷新');
+            return;
+        }
+        isLoading = true;
         // 记录刷新时间
         lastRefreshTime = Date.now();
 
@@ -629,6 +787,8 @@
                     '<p>请先运行 Python 脚本生成数据文件</p>' +
                     '<p style="font-size:12px;margin-top:10px;">python main.py --export</p></div>';
             }
+        } finally {
+            isLoading = false;
         }
     }
 
@@ -754,6 +914,8 @@
 
     /**
      * 加载单个板块类型的分时数据
+     * 数据优先级：前端缓存(localStorage) → 东方财富API → 本地JSON文件
+     * API获取成功后自动缓存到localStorage，避免频繁请求
      * @returns {Promise<Object|null>} 分时数据对象，失败返回null
      */
     async function loadIntradayDataSingle(chartDom, sectorType) {
@@ -762,14 +924,25 @@
         const today = new Date().toISOString().slice(0, 10);
         const isToday = selectedDate === today;
 
-        // 今天的数据：优先尝试东方财富API（实时分钟级数据）
+        // 今天的数据：优先尝试前端缓存（未过期），命中则直接使用
         if (isToday) {
+            const cached = loadIntradayCache(sectorType, selectedDate);
+            if (cached) {
+                data = cached;
+                console.log(`分时图数据来源(${sectorType}): 前端缓存 (${selectedDate})`);
+            }
+        }
+
+        // 缓存未命中：尝试东方财富API（实时分钟级数据）
+        if (!data && isToday) {
             try {
                 const topN = getTopNValue() === -1 ? 500 : (getTopNValue() || 30);
                 const selectedNames = getFilterParam();
                 data = await EastMoneyAPI.buildIntradayData(sectorType, topN, selectedNames);
                 if (data) {
                     console.log(`分时图数据来源(${sectorType}): 东方财富API`);
+                    // API获取成功后缓存到localStorage，供后续刷新使用
+                    saveIntradayCache(sectorType, selectedDate, data);
                 }
             } catch (err) {
                 console.warn(`东方财富API获取${sectorType}分时数据失败，尝试本地JSON:`, err);

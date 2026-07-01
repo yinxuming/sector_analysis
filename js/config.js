@@ -17,6 +17,12 @@ const CONFIG = {
     // 数据刷新阈值（毫秒）：页面从不可见到可见时，超过此间隔自动刷新
     refreshThreshold: 5 * 60 * 1000,  // 5分钟
 
+    // 分时图自动刷新间隔（秒）：分时图可见时按此间隔自动刷新，0=不自动刷新
+    intradayRefreshInterval: 30,
+
+    // 分时数据前端缓存TTL（秒）：从东方财富API获取的数据缓存此时长，避免频繁请求
+    intradayCacheTTL: 60,
+
     // 默认配置
     defaults: {
         sectorType: 'concept',

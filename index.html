@@ -62,6 +62,16 @@
             <div class="control-group" id="intradayFullGroup" style="display:none;">
                 <button class="btn-intraday-full" id="btnIntradayFull" title="从东方财富API获取当天完整分时数据（240个采样点）">获取完整分时</button>
             </div>
+            <div class="control-group" id="intradayRefreshGroup" style="display:none;">
+                <label>刷新间隔：</label>
+                <select id="intradayRefreshInterval" title="分时图自动刷新间隔（页面可见时生效）">
+                    <option value="0">关闭</option>
+                    <option value="15">15秒</option>
+                    <option value="30" selected>30秒</option>
+                    <option value="60">1分钟</option>
+                    <option value="300">5分钟</option>
+                </select>
+            </div>
             <button class="btn-refresh" id="btnRefresh">刷新数据</button>
             <button class="btn-config" id="btnConfig">板块配置</button>
         </div>
@@ -114,9 +124,9 @@
         </div>
     </div>
 
-    <script src="js/config.js?v=20260617j"></script>
+    <script src="js/config.js?v=20260630a"></script>
     <script src="js/eastmoney_api.js?v=20260617j"></script>
     <script src="js/charts.js?v=20260617i"></script>
-    <script src="js/app.js?v=20260617j"></script>
+    <script src="js/app.js?v=20260630a"></script>
 </body>
 </html>
