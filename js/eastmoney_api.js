@@ -319,16 +319,28 @@ const EastMoneyAPI = {
         const flowData = await this.fetchBatchSectorFlow(codes, 240, 3);
 
         // 3. 构建时间轴（取第一个有数据的板块的时间序列）
+        // 同时校验数据日期：开市前调用东方财富API会返回上一交易日的数据，
+        // 此时不应当作今日数据展示，需返回null让前端显示"暂无分时数据"
         let times = [];
+        let flowDate = null;
         for (const code of codes) {
             const flows = flowData[code] || [];
             if (flows.length > 0) {
                 times = flows.map(f => f.timeShort);
+                // flow.time格式为"2026-07-01 14:51"，提取日期部分
+                flowDate = (flows[0].time || '').split(' ')[0] || null;
                 break;
             }
         }
 
         if (times.length === 0) return null;
+
+        // 日期校验：API返回的数据日期非今日时，视为开市前/非交易时段的旧数据，不展示
+        const todayStr = new Date().toISOString().slice(0, 10);
+        if (flowDate && flowDate !== todayStr) {
+            console.warn(`东方财富API返回的是${flowDate}的数据（非今日${todayStr}），可能开市前调用，忽略本次数据`);
+            return null;
+        }
 
         // 4. 构建每个板块的分时数据（klines返回的是累计主力净流入，直接使用）
         const sectorsData = displaySectors.map(sector => {
