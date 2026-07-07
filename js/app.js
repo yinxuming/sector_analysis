@@ -147,6 +147,17 @@
             loadData();
         });
         document.getElementById('indicator').addEventListener('change', function() {
+            // "自定义"不支持分时图和动态排行，自动切换到柱状图
+            if (this.value === '自定义') {
+                const chartTypeEl = document.getElementById('chartType');
+                if (chartTypeEl.value === 'intraday' || chartTypeEl.value === 'barRace') {
+                    chartTypeEl.value = 'bar';
+                    // chartType的change事件会调用updateDatePickersVisibility + loadData
+                    // 此时indicator已经是"自定义"，dateRangeGroup会正确显示
+                    chartTypeEl.dispatchEvent(new Event('change'));
+                    return;
+                }
+            }
             updateDatePickersVisibility();
             loadData();
             // 指标变化后重新评估自动刷新
@@ -170,15 +181,14 @@
         });
         document.getElementById('topN').addEventListener('change', loadData);
         document.getElementById('intradayDate').addEventListener('change', function() {
-            // 历史日期下，时间指标强制为"今日"并禁用（历史数据只有当日数据）
+            // 历史日期下，时间指标强制为"今日"（历史数据只有当日分时数据）
+            // 但不禁用indicator下拉框，用户仍可切换到"自定义"使用日期段模式
             const selectedDate = this.value || new Date().toISOString().slice(0, 10);
             const today = new Date().toISOString().slice(0, 10);
             const indicatorSelect = document.getElementById('indicator');
-            if (selectedDate !== today) {
+            if (selectedDate !== today && indicatorSelect.value !== '自定义') {
                 indicatorSelect.value = '今日';
-                indicatorSelect.disabled = true;
-            } else {
-                indicatorSelect.disabled = false;
+                updateDatePickersVisibility();
             }
             loadData();
             // 日期变化后重新评估自动刷新（历史日期不自动刷新）
