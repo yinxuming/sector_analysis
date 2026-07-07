@@ -32,6 +32,7 @@
                     <option value="5日">5日</option>
                     <option value="10日">10日</option>
                     <option value="一周">一周</option>
+                    <option value="自定义">自定义</option>
                 </select>
             </div>
             <div class="control-group">
@@ -58,6 +59,13 @@
             <div class="control-group" id="dateGroup" style="display:none;">
                 <label>日期：</label>
                 <input type="date" id="intradayDate" />
+            </div>
+            <!-- 自定义日期段选择器：时间指标选"自定义"时显示 -->
+            <div class="control-group" id="dateRangeGroup" style="display:none;">
+                <label>起止：</label>
+                <input type="date" id="startDate" />
+                <span style="color:#8b949e">~</span>
+                <input type="date" id="endDate" />
             </div>
             <div class="control-group" id="intradayFullGroup" style="display:none;">
                 <button class="btn-intraday-full" id="btnIntradayFull" title="从东方财富API获取当天完整分时数据（240个采样点）">获取完整分时</button>
@@ -143,7 +151,7 @@
 
     <script src="js/config.js?v=20260630a"></script>
     <script src="js/eastmoney_api.js?v=20260702a"></script>
-    <script src="js/charts.js?v=20260617i"></script>
-    <script src="js/app.js?v=20260630a"></script>
+    <script src="js/charts.js?v=20260702b"></script>
+    <script src="js/app.js?v=20260702a"></script>
 </body>
 </html>

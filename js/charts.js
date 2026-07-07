@@ -551,6 +551,10 @@ const ChartRender = {
             };
         });
 
+        // 跟踪鼠标Y位置对应的数据值，用于tooltip中高亮鼠标最近的曲线条目
+        // 多条曲线相交或相邻时，高亮当前鼠标对应的曲线，方便准确区分是哪条曲线
+        let mouseYDataValue = null;
+
         const option = {
             backgroundColor: '#161b22',
             title: {
@@ -578,8 +582,25 @@ const ChartRender = {
                     let html = `<b>${params[0].axisValue}</b><br/>`;
                     // 按当前值排序
                     params.sort((a, b) => (b.value || 0) - (a.value || 0));
+
+                    // 找到鼠标Y位置最近的曲线条目（用于tooltip高亮）
+                    // 多条曲线相交或相邻时，高亮当前鼠标对应的曲线，方便准确区分
+                    let highlightedIndex = -1;
+                    if (mouseYDataValue !== null) {
+                        let minDist = Infinity;
+                        params.forEach((p, i) => {
+                            if (p.value !== null && p.value !== undefined) {
+                                const dist = Math.abs(p.value - mouseYDataValue);
+                                if (dist < minDist) {
+                                    minDist = dist;
+                                    highlightedIndex = i;
+                                }
+                            }
+                        });
+                    }
+
                     let totalTurnover = 0;
-                    params.forEach(p => {
+                    params.forEach((p, i) => {
                         const sector = displaySectors.find(s => s.name === p.seriesName);
                         if (!sector) return;
                         const val = p.value !== undefined && p.value !== null ? p.value.toFixed(2) : '-';
@@ -591,10 +612,20 @@ const ChartRender = {
                         const valColor = p.value >= 0 ? '#f85149' : '#3fb950';
                         const pctColor = changePct >= 0 ? '#f85149' : '#3fb950';
                         // 格式: 板块名(涨幅): 净流入 成交额
-                        html += `<span style="color:${p.color}">●</span> ${p.seriesName}` +
-                                `(<span style="color:${pctColor};font-weight:bold">${pctStr}</span>): ` +
-                                `<span style="color:${valColor};font-weight:bold">${valStr}</span> ` +
-                                `<span style="color:#58a6ff">${turnoverYi.toFixed(1)}亿</span><br/>`;
+                        // 仅高亮选中条目（背景色高亮），其余条目保持原有tooltip样式不变
+                        if (i === highlightedIndex) {
+                            html += `<div style="background:rgba(88,166,255,0.3);border-radius:3px;padding:1px 4px;">` +
+                                    `<span style="color:${p.color}">●</span> <b>${p.seriesName}</b>` +
+                                    `(<span style="color:${pctColor};font-weight:bold">${pctStr}</span>): ` +
+                                    `<span style="color:${valColor};font-weight:bold">${valStr}</span> ` +
+                                    `<span style="color:#58a6ff">${turnoverYi.toFixed(1)}亿</span>` +
+                                    `</div>`;
+                        } else {
+                            html += `<span style="color:${p.color}">●</span> ${p.seriesName}` +
+                                    `(<span style="color:${pctColor};font-weight:bold">${pctStr}</span>): ` +
+                                    `<span style="color:${valColor};font-weight:bold">${valStr}</span> ` +
+                                    `<span style="color:#58a6ff">${turnoverYi.toFixed(1)}亿</span><br/>`;
+                        }
                     });
                     html += `<hr style="border-color:#30363d;margin:4px 0"/>` +
                             `<span style="color:#8b949e">总成交额: </span>` +
@@ -647,6 +678,15 @@ const ChartRender = {
         };
 
         chart.setOption(option);
+
+        // 注册鼠标移动事件：跟踪鼠标Y位置对应的数据值
+        // convertFromPixel将像素Y坐标转为y轴数据值，tooltip formatter中据此高亮最近曲线
+        chart.getZr().on('mousemove', function(e) {
+            mouseYDataValue = chart.convertFromPixel({yAxisIndex: 0}, e.offsetY);
+        });
+        chart.getZr().on('mouseout', function() {
+            mouseYDataValue = null;
+        });
 
         // 点击右侧标签(markPoint)切换对应曲线显隐
         // 记录每个series的显隐状态

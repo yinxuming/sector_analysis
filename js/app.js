@@ -76,21 +76,65 @@
      */
     function init() {
         bindEvents();
-        // 初始化日期选择器：动态排行不需要，其他图表都显示
+        // 初始化日期选择器
         const chartType = document.getElementById('chartType').value;
-        const isBarRace = chartType === 'barRace';
-        document.getElementById('dateGroup').style.display = isBarRace ? 'none' : 'inline-flex';
         const isIntraday = chartType === 'intraday';
         document.getElementById('intradayFullGroup').style.display = isIntraday ? 'inline-flex' : 'none';
-        if (!isBarRace && !document.getElementById('intradayDate').value) {
+        if (!document.getElementById('intradayDate').value) {
             document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
         }
+        // 初始化自定义日期段默认值（默认最近7天）
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+        if (!document.getElementById('startDate').value) {
+            document.getElementById('startDate').value = weekAgo;
+        }
+        if (!document.getElementById('endDate').value) {
+            document.getElementById('endDate').value = todayStr;
+        }
+        updateDatePickersVisibility();
         // 先加载板块列表，完成后再加载数据（确保板块过滤生效）
         loadSectorList().then(() => {
             loadData();
             // 初始数据加载后启动分时图自动刷新
             startIntradayAutoRefresh();
         });
+    }
+
+    /**
+     * 更新日期选择器组的可见性
+     * 规则：
+     * - barRace隐藏所有日期选择器（需要多日数据，不需要选日期）
+     * - intraday始终用单日期选择器（分时图只看单日）
+     * - "自定义"指标显示日期范围选择器（仅柱状图/热力图/桑基图/表格）
+     * - 其他情况显示单日期选择器
+     */
+    function updateDatePickersVisibility() {
+        const chartType = document.getElementById('chartType').value;
+        const indicator = document.getElementById('indicator').value;
+        const isBarRace = chartType === 'barRace';
+        const isIntraday = chartType === 'intraday';
+        const isCustom = indicator === '自定义';
+        // barRace不需要日期选择器
+        if (isBarRace) {
+            document.getElementById('dateGroup').style.display = 'none';
+            document.getElementById('dateRangeGroup').style.display = 'none';
+            return;
+        }
+        // intraday始终用单日期选择器
+        if (isIntraday) {
+            document.getElementById('dateGroup').style.display = 'inline-flex';
+            document.getElementById('dateRangeGroup').style.display = 'none';
+            return;
+        }
+        // "自定义"指标：显示日期范围选择器，隐藏单日期选择器
+        if (isCustom) {
+            document.getElementById('dateGroup').style.display = 'none';
+            document.getElementById('dateRangeGroup').style.display = 'inline-flex';
+        } else {
+            document.getElementById('dateGroup').style.display = 'inline-flex';
+            document.getElementById('dateRangeGroup').style.display = 'none';
+        }
     }
 
     /**
@@ -103,14 +147,13 @@
             loadData();
         });
         document.getElementById('indicator').addEventListener('change', function() {
+            updateDatePickersVisibility();
             loadData();
             // 指标变化后重新评估自动刷新
             startIntradayAutoRefresh();
         });
         document.getElementById('chartType').addEventListener('change', function() {
-            // 动态排行不需要日期选择器（需要多日数据），其他图表都显示
             const isBarRace = this.value === 'barRace';
-            document.getElementById('dateGroup').style.display = isBarRace ? 'none' : 'inline-flex';
             // 获取完整分时按钮仅分时图显示
             const isIntraday = this.value === 'intraday';
             document.getElementById('intradayFullGroup').style.display = isIntraday ? 'inline-flex' : 'none';
@@ -120,6 +163,7 @@
             }
             // 时间指标在动态排行模式下隐藏（不需要）
             document.getElementById('indicator').parentElement.style.display = isBarRace ? 'none' : 'inline-flex';
+            updateDatePickersVisibility();
             loadData();
             // 图表类型变化后重新评估自动刷新
             startIntradayAutoRefresh();
@@ -140,6 +184,9 @@
             // 日期变化后重新评估自动刷新（历史日期不自动刷新）
             startIntradayAutoRefresh();
         });
+        // 自定义日期段变化事件
+        document.getElementById('startDate').addEventListener('change', loadData);
+        document.getElementById('endDate').addEventListener('change', loadData);
         // 分时图自动刷新间隔选择
         document.getElementById('intradayRefreshInterval').addEventListener('change', function() {
             console.log(`刷新间隔变更为: ${this.value}秒`);
@@ -774,6 +821,9 @@
             } else if (chartType === 'intraday') {
                 // 分时图：优先东方财富API
                 await loadIntradayData(chartDom, sectorType);
+            } else if (indicator === '自定义') {
+                // 自定义日期段：聚合多日intraday JSON数据
+                await loadCustomRangeData(chartDom, sectorType, chartType);
             } else {
                 // 实时数据：优先东方财富API，fallback本地JSON
                 await loadRealtimeData(chartDom, sectorType, indicator, chartType);
@@ -796,6 +846,124 @@
         } finally {
             isLoading = false;
         }
+    }
+
+    /**
+     * 加载自定义日期段数据并渲染图表
+     * 遍历日期范围内每个日期的intraday JSON文件，聚合（净流入求和、成交额求和、涨幅取平均）后渲染
+     * @param {HTMLElement} chartDom - 图表容器DOM
+     * @param {string} sectorType - 板块类型
+     * @param {string} chartType - 图表类型
+     */
+    async function loadCustomRangeData(chartDom, sectorType, chartType) {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        if (!startDate || !endDate) {
+            throw new Error('请选择起止日期');
+        }
+        if (startDate > endDate) {
+            throw new Error('开始日期不能晚于结束日期');
+        }
+        // 限制最大范围30天（数据保留期）
+        const diffDays = Math.round((new Date(endDate) - new Date(startDate)) / 86400000);
+        if (diffDays > 30) {
+            throw new Error('自定义日期段最多30天，请缩小范围');
+        }
+
+        // 生成日期列表（含非交易日，无JSON文件时自动跳过）
+        const dates = [];
+        let current = new Date(startDate);
+        const end = new Date(endDate);
+        while (current <= end) {
+            dates.push(current.toISOString().slice(0, 10));
+            current.setDate(current.getDate() + 1);
+        }
+
+        // "全部"模式：分别聚合行业和概念，然后合并
+        if (sectorType === 'all') {
+            const [industryData, conceptData] = await Promise.all([
+                aggregateIntradayRange('industry', dates),
+                aggregateIntradayRange('concept', dates)
+            ]);
+            const data = mergeIndustryConceptData(industryData, conceptData);
+            if (!data) throw new Error('所选日期段无数据，请确认日期范围内有已采集的数据');
+            const filteredData = filterDataBySectors(data);
+            renderChart(chartDom, filteredData, chartType);
+            updateSummary(filteredData);
+            return;
+        }
+
+        const data = await aggregateIntradayRange(sectorType, dates);
+        if (!data) throw new Error('所选日期段无数据，请确认日期范围内有已采集的数据');
+        const filteredData = filterDataBySectors(data);
+        renderChart(chartDom, filteredData, chartType);
+        updateSummary(filteredData);
+    }
+
+    /**
+     * 聚合日期范围内多个intraday JSON的数据
+     * 并行加载所有日期的intraday文件，对每个板块：净流入求和、成交额求和、涨幅取平均
+     * @param {string} sectorType - 板块类型
+     * @param {string[]} dates - 日期列表
+     * @returns {Promise<Object|null>} 聚合后的realtime格式数据，无数据时返回null
+     */
+    async function aggregateIntradayRange(sectorType, dates) {
+        // 并行加载所有日期的intraday JSON，文件不存在时静默跳过
+        const results = await Promise.all(
+            dates.map(date =>
+                fetchJSON(CONFIG.dataPath + `intraday_${sectorType}_${date}.json`)
+                    .then(data => ({ data, date }))
+                    .catch(() => null)
+            )
+        );
+
+        // 过滤出成功加载的日期数据
+        const validResults = results.filter(r => r !== null && r.data && r.data.sectors);
+        if (validResults.length === 0) return null;
+
+        // 按板块名称聚合：净流入求和、成交额求和、涨幅收集用于取平均
+        const sectorMap = {};
+        validResults.forEach(({ data }) => {
+            (data.sectors || []).forEach(s => {
+                if (!sectorMap[s.name]) {
+                    sectorMap[s.name] = {
+                        name: s.name,
+                        totalInflow: 0,
+                        totalTurnover: 0,
+                        changePcts: []
+                    };
+                }
+                sectorMap[s.name].totalInflow += (s.final_value || 0);
+                sectorMap[s.name].totalTurnover += (s.turnover_yi || 0);
+                sectorMap[s.name].changePcts.push(s.change_pct || 0);
+            });
+        });
+
+        // 转换为realtime排名格式
+        const sectors = Object.values(sectorMap).map(s => {
+            const avgChangePct = s.changePcts.length > 0
+                ? s.changePcts.reduce((a, b) => a + b, 0) / s.changePcts.length
+                : 0;
+            return {
+                name: s.name,
+                main_net_inflow: Math.round(s.totalInflow * 100) / 100,
+                change_percent: Math.round(avgChangePct * 100) / 100,
+                turnover: Math.round(s.totalTurnover * 100) / 100,
+                main_net_inflow_pct: s.totalTurnover
+                    ? Math.round((s.totalInflow / s.totalTurnover * 100) * 100) / 100
+                    : 0
+            };
+        });
+
+        return {
+            update_time: `${validResults[0].date} ~ ${validResults[validResults.length - 1].date}`,
+            date: `${dates[0]}~${dates[dates.length - 1]}`,
+            indicator: '自定义',
+            sector_type: validResults[0].data.sector_type || '',
+            sectors: sectors,
+            source: 'custom_range_aggregate'
+        };
     }
 
     /**
