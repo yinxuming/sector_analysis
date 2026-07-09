@@ -919,14 +919,21 @@
      * @returns {Promise<Object|null>} 聚合后的realtime格式数据，无数据时返回null
      */
     async function aggregateIntradayRange(sectorType, dates) {
-        // 并行加载所有日期的intraday JSON，文件不存在时静默跳过
-        const results = await Promise.all(
-            dates.map(date =>
-                fetchJSON(CONFIG.dataPath + `intraday_${sectorType}_${date}.json`)
-                    .then(data => ({ data, date }))
-                    .catch(() => null)
-            )
-        );
+        // 串行加载所有日期的intraday JSON，每次请求间加随机100-500ms间隔
+        // 避免连续请求过快被服务器限流，文件不存在时静默跳过
+        const results = [];
+        for (const date of dates) {
+            try {
+                const data = await fetchJSON(CONFIG.dataPath + `intraday_${sectorType}_${date}.json`);
+                results.push({ data, date });
+            } catch(e) {
+                // 文件不存在（非交易日/无数据日期）静默跳过
+            }
+            // 随机100-500ms间隔，避免连续请求过快
+            if (dates.indexOf(date) < dates.length - 1) {
+                await new Promise(r => setTimeout(r, 100 + Math.random() * 400));
+            }
+        }
 
         // 过滤出成功加载的日期数据
         const validResults = results.filter(r => r !== null && r.data && r.data.sectors);

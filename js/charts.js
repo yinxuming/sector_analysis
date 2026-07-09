@@ -521,12 +521,13 @@ const ChartRender = {
                 data: sector.data,
                 smooth: false,
                 symbol: 'none',
+                triggerLineEvent: true,  // symbol为none时仍需响应曲线点击事件
                 lineStyle: { width: 1.5, color: color },
                 itemStyle: { color: color },
                 // 末端标签：与tooltip格式一致，富文本实现红涨绿跌
                 markPoint: {
                     symbol: 'circle',
-                    symbolSize: 4,
+                    symbolSize: 8,
                     itemStyle: { color: color },
                     label: {
                         show: true,
@@ -688,59 +689,103 @@ const ChartRender = {
             mouseYDataValue = null;
         });
 
-        // 点击右侧标签(markPoint)切换对应曲线显隐
-        // 记录每个series的显隐状态
-        const seriesVisible = new Array(finalSeries.length).fill(true);
+        // 点击曲线聚焦：点击某条曲线只显示该曲线（高亮+加粗），隐藏其他曲线；
+        // 再次点击同一条曲线，恢复显示所有曲线
+        // 点击markPoint标签也触发聚焦
+        let focusedIndex = -1;  // 当前聚焦的series索引，-1表示全部显示
 
-        chart.on('click', function(params) {
-            if (params.componentType === 'markPoint' && params.seriesName) {
-                const seriesIndex = finalSeries.findIndex(s => s.name === params.seriesName);
-                if (seriesIndex === -1) return;
-
-                seriesVisible[seriesIndex] = !seriesVisible[seriesIndex];
-                const visible = seriesVisible[seriesIndex];
-                const color = colorPool[seriesIndex % colorPool.length];
-                const sector = displaySectors[seriesIndex];
+        /**
+         * 更新曲线聚焦状态：focusedIndex对应的曲线加粗高亮，其余淡化
+         * @param {number} focusIdx - 聚焦的series索引，-1恢复全部
+         */
+        function updateFocusState(focusIdx) {
+            // 重建完整series数组，确保markPoint和lineStyle样式完全生效
+            const updatedSeries = displaySectors.map((sector, i) => {
+                const color = colorPool[i % colorPool.length];
                 const changePct = sector.change_pct || 0;
                 const isPositive = sector.final_value >= 0;
-                const pctColor = changePct >= 0 ? '#f85149' : '#3fb950';
+                const pctStr = changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`;
+                const valStr = sector.final_value >= 0 ? `+${sector.final_value.toFixed(2)}` : `${sector.final_value.toFixed(2)}`;
                 const valColor = isPositive ? '#f85149' : '#3fb950';
+                const pctColor = changePct >= 0 ? '#f85149' : '#3fb950';
 
-                // 构造更新：仅更新目标series
-                const updates = new Array(finalSeries.length).fill(null);
-                if (visible) {
-                    // 恢复显示
-                    updates[seriesIndex] = {
-                        lineStyle: { width: 1.5, opacity: 1 },
-                        markPoint: {
-                            label: {
-                                rich: {
-                                    name: { color: '#e6edf3' },
-                                    pct: { color: pctColor },
-                                    val: { color: valColor },
-                                    turnover: { color: '#58a6ff' }
-                                }
-                            }
-                        }
+                let lineWidth, lineOpacity, labelColors, fontWeight;
+                if (focusIdx === -1 || i === focusIdx) {
+                    // 全部显示 或 聚焦曲线：原色+正常/加粗
+                    lineWidth = focusIdx === -1 ? 1.5 : 3;
+                    lineOpacity = 1;
+                    labelColors = {
+                        name: '#e6edf3',
+                        pct: pctColor,
+                        val: valColor,
+                        turnover: '#58a6ff'
                     };
+                    fontWeight = focusIdx === -1 ? 'normal' : 'bold';
                 } else {
-                    // 隐藏曲线，标签变灰
-                    updates[seriesIndex] = {
-                        lineStyle: { width: 0, opacity: 0 },
-                        markPoint: {
-                            label: {
-                                rich: {
-                                    name: { color: '#484f58' },
-                                    pct: { color: '#484f58' },
-                                    val: { color: '#484f58' },
-                                    turnover: { color: '#484f58' }
-                                }
-                            }
-                        }
-                    };
+                    // 非聚焦曲线：淡化
+                    lineWidth = 1;
+                    lineOpacity = 0.15;
+                    labelColors = { name: '#484f58', pct: '#484f58', val: '#484f58', turnover: '#484f58' };
+                    fontWeight = 'normal';
                 }
-                chart.setOption({ series: updates });
+
+                return {
+                    name: sector.name,
+                    type: 'line',
+                    data: sector.data,
+                    smooth: false,
+                    symbol: 'none',
+                    triggerLineEvent: true,
+                    lineStyle: { width: lineWidth, color: color, opacity: lineOpacity },
+                    itemStyle: { color: color },
+                    markPoint: {
+                        symbol: 'circle',
+                        symbolSize: focusIdx === i ? 10 : 8,
+                        itemStyle: { color: color, opacity: lineOpacity },
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: [
+                                `{name|${sector.name}}`,
+                                `{pct|(${pctStr})}: `,
+                                `{val|${valStr}亿} `,
+                                `{turnover|${(sector.turnover_yi || 0).toFixed(1)}亿}`
+                            ].join(''),
+                            fontSize: 10,
+                            fontWeight: fontWeight,
+                            rich: {
+                                name: { color: labelColors.name, fontSize: 10, fontWeight: fontWeight },
+                                pct: { color: labelColors.pct, fontSize: 10, fontWeight: fontWeight },
+                                val: { color: labelColors.val, fontSize: 10, fontWeight: fontWeight },
+                                turnover: { color: labelColors.turnover, fontSize: 10, fontWeight: fontWeight }
+                            },
+                            offset: [0, labelOffsets[i]]
+                        },
+                        data: [{ coord: [times.length - 1, sector.final_value] }]
+                    }
+                };
+            });
+            chart.setOption({ series: updatedSeries }, { replaceMerge: ['series'] });
+        }
+
+        chart.on('click', function(params) {
+            // markPoint点击时可能没有seriesName，用seriesIndex兜底
+            let seriesIndex = -1;
+            if (params.seriesName) {
+                seriesIndex = finalSeries.findIndex(s => s.name === params.seriesName);
+            } else if (typeof params.seriesIndex === 'number') {
+                seriesIndex = params.seriesIndex;
             }
+            if (seriesIndex === -1 || seriesIndex >= finalSeries.length) return;
+
+            if (focusedIndex === seriesIndex) {
+                // 再次点击同一条曲线，恢复全部
+                focusedIndex = -1;
+            } else {
+                // 聚焦该曲线
+                focusedIndex = seriesIndex;
+            }
+            updateFocusState(focusedIndex);
         });
 
         window.addEventListener('resize', () => chart.resize());
