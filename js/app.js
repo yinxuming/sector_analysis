@@ -957,18 +957,20 @@
             });
         });
 
-        // 转换为realtime排名格式
+        // 转换为realtime排名格式（字段名与realtime JSON一致）
         const sectors = Object.values(sectorMap).map(s => {
             const avgChangePct = s.changePcts.length > 0
                 ? s.changePcts.reduce((a, b) => a + b, 0) / s.changePcts.length
                 : 0;
+            const inflow = Math.round(s.totalInflow * 100) / 100;
+            const turnover = Math.round(s.totalTurnover * 100) / 100;
             return {
                 name: s.name,
-                main_net_inflow: Math.round(s.totalInflow * 100) / 100,
-                change_percent: Math.round(avgChangePct * 100) / 100,
-                turnover: Math.round(s.totalTurnover * 100) / 100,
-                main_net_inflow_pct: s.totalTurnover
-                    ? Math.round((s.totalInflow / s.totalTurnover * 100) * 100) / 100
+                main_net_inflow_yi: inflow,
+                change_pct: Math.round(avgChangePct * 100) / 100,
+                turnover_yi: turnover,
+                main_net_inflow_pct: turnover
+                    ? Math.round((inflow / turnover * 100) * 100) / 100
                     : 0
             };
         });
@@ -1254,18 +1256,23 @@
     /**
      * 将分时数据转换为实时排名数据格式
      * 提取每个板块的final_value作为净流入，并构建sectors数组
+     * 字段名需与realtime JSON一致：main_net_inflow_yi/change_pct/turnover_yi/main_net_inflow_pct
      * @param {Object} intradayData - 分时数据
      * @param {string} date - 日期
      * @returns {Object} 实时排名格式数据
      */
     function convertIntradayToRealtime(intradayData, date) {
-        const sectors = (intradayData.sectors || []).map(s => ({
-            name: s.name,
-            main_net_inflow: s.final_value || 0,
-            change_percent: s.change_percent || 0,
-            turnover: s.turnover || 0,
-            main_net_inflow_pct: s.turnover ? ((s.final_value || 0) / s.turnover * 100) : 0
-        }));
+        const sectors = (intradayData.sectors || []).map(s => {
+            const finalValue = s.final_value || 0;
+            const turnoverYi = s.turnover_yi || 0;
+            return {
+                name: s.name,
+                main_net_inflow_yi: finalValue,
+                change_pct: s.change_pct || 0,
+                turnover_yi: turnoverYi,
+                main_net_inflow_pct: turnoverYi ? (finalValue / turnoverYi * 100) : 0
+            };
+        });
         return {
             update_time: intradayData.update_time || '',
             date: date,
