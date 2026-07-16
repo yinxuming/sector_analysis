@@ -1,6 +1,6 @@
 /**
  * ECharts图表封装模块
- * 提供柱状图、热力图、桑基图、动态排行等图表
+ * 提供柱状图、热力图、分时图、表格、板块走势图等图表
  */
 
 const ChartRender = {
@@ -203,219 +203,6 @@ const ChartRender = {
         return chart;
     },
 
-    /**
-     * 渲染桑基图 - 资金流向关系
-     */
-    renderSankey(chartDom, data) {
-        const chart = echarts.init(chartDom, 'dark');
-        const sectors = data.sectors || [];
-        const topN = parseInt(document.getElementById('topN').value) || 20;
-        const displaySectors = topN > 0 ? sectors.slice(0, topN) : sectors;
-
-        // 分离流入和流出板块
-        const inflowSectors = displaySectors.filter(s => s.main_net_inflow_yi > 0);
-        const outflowSectors = displaySectors.filter(s => s.main_net_inflow_yi < 0);
-
-        // 构建桑基图节点（标签格式：板块名(涨幅)）
-        const nodes = [];
-        nodes.push({ name: '市场资金', itemStyle: { color: '#58a6ff' } });
-
-        inflowSectors.forEach(s => {
-            const pct = (s.change_pct || 0) >= 0 ? `+${(s.change_pct || 0).toFixed(2)}%` : `${(s.change_pct || 0).toFixed(2)}%`;
-            nodes.push({
-                name: `${s.name}(${pct})`,
-                itemStyle: { color: '#f85149' }
-            });
-        });
-
-        outflowSectors.forEach(s => {
-            const pct = (s.change_pct || 0) >= 0 ? `+${(s.change_pct || 0).toFixed(2)}%` : `${(s.change_pct || 0).toFixed(2)}%`;
-            nodes.push({
-                name: `${s.name}(${pct})`,
-                itemStyle: { color: '#3fb950' }
-            });
-        });
-
-        // 构建桑基图链接
-        const links = [];
-        // 流入板块：市场 -> 板块
-        inflowSectors.forEach(s => {
-            const pct = (s.change_pct || 0) >= 0 ? `+${(s.change_pct || 0).toFixed(2)}%` : `${(s.change_pct || 0).toFixed(2)}%`;
-            links.push({
-                source: '市场资金',
-                target: `${s.name}(${pct})`,
-                value: Math.abs(s.main_net_inflow_yi)
-            });
-        });
-        // 流出板块：板块 -> 市场
-        outflowSectors.forEach(s => {
-            const pct = (s.change_pct || 0) >= 0 ? `+${(s.change_pct || 0).toFixed(2)}%` : `${(s.change_pct || 0).toFixed(2)}%`;
-            links.push({
-                source: `${s.name}(${pct})`,
-                target: '市场资金',
-                value: Math.abs(s.main_net_inflow_yi)
-            });
-        });
-
-        const option = {
-            backgroundColor: '#161b22',
-            title: {
-                text: `${data.sector_type || '行业板块'} - ${data.indicator || '今日'}资金流向桑基图`,
-                left: 'center',
-                textStyle: { color: '#e6edf3', fontSize: 18 }
-            },
-            tooltip: {
-                trigger: 'item',
-                triggerOn: 'mousemove',
-                formatter: function(params) {
-                    if (params.dataType === 'edge') {
-                        return `${params.data.source} → ${params.data.target}<br/>金额: ${params.data.value.toFixed(2)}亿`;
-                    }
-                    return params.name;
-                }
-            },
-            series: [{
-                type: 'sankey',
-                data: nodes,
-                links: links,
-                emphasis: {
-                    focus: 'adjacency'
-                },
-                lineStyle: {
-                    color: 'gradient',
-                    curveness: 0.5,
-                    opacity: 0.4
-                },
-                label: {
-                    color: '#e6edf3',
-                    fontSize: 12
-                },
-                left: '5%',
-                right: '5%',
-                top: '10%',
-                bottom: '5%'
-            }]
-        };
-
-        chart.setOption(option);
-        window.addEventListener('resize', () => chart.resize());
-        return chart;
-    },
-
-    /**
-     * 渲染动态排行图 (Bar Race)
-     */
-    renderBarRace(chartDom, data) {
-        const chart = echarts.init(chartDom, 'dark');
-        const dates = data.dates || [];
-        const dailyData = data.daily_data || {};
-
-        if (dates.length === 0) {
-            chart.showLoading({ text: '暂无历史数据，需积累多日快照后展示' });
-            return chart;
-        }
-
-        // 获取所有板块名称
-        const allNames = new Set();
-        Object.values(dailyData).forEach(sectors => {
-            sectors.forEach(s => allNames.add(s.name));
-        });
-        const nameList = Array.from(allNames);
-
-        let currentIndex = 0;
-
-        function getOption(index) {
-            const date = dates[index];
-            const sectors = dailyData[date] || [];
-            sectors.sort((a, b) => a.value - b.value);
-
-            const names = sectors.map(s => s.name);
-            const values = sectors.map(s => s.value);
-
-            return {
-                backgroundColor: '#161b22',
-                title: {
-                    text: `${data.sector_type || '行业板块'} - 资金流向动态排行`,
-                    subtext: date,
-                    left: 'center',
-                    textStyle: { color: '#e6edf3', fontSize: 18 },
-                    subtextStyle: { color: '#8b949e', fontSize: 14 }
-                },
-                grid: {
-                    left: '3%',
-                    right: '8%',
-                    bottom: '3%',
-                    top: '12%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'value',
-                    name: '主力资金净流入（亿元）',
-                    axisLine: { lineStyle: { color: '#30363d' } },
-                    axisLabel: { color: '#8b949e' },
-                    splitLine: { lineStyle: { color: '#21262d' } }
-                },
-                yAxis: {
-                    type: 'category',
-                    data: names,
-                    axisLine: { lineStyle: { color: '#30363d' } },
-                    axisLabel: { color: '#e6edf3', fontSize: 12 }
-                },
-                series: [{
-                    type: 'bar',
-                    data: values.map(v => ({
-                        value: v,
-                        itemStyle: {
-                            color: v >= 0 ? '#f85149' : '#3fb950'
-                        },
-                        label: {
-                            show: true,
-                            position: v >= 0 ? 'right' : 'left',
-                            formatter: `${v.toFixed(2)}亿`,
-                            color: '#e6edf3',
-                            fontSize: 11
-                        }
-                    })),
-                    barWidth: '60%'
-                }],
-                animationDurationUpdate: 800,
-                animationEasingUpdate: 'cubicInOut'
-            };
-        }
-
-        chart.setOption(getOption(currentIndex));
-
-        // 自动播放
-        let timer = null;
-        function startPlay() {
-            if (timer) clearInterval(timer);
-            timer = setInterval(() => {
-                currentIndex = (currentIndex + 1) % dates.length;
-                chart.setOption(getOption(currentIndex));
-            }, 2000);
-        }
-
-        function stopPlay() {
-            if (timer) {
-                clearInterval(timer);
-                timer = null;
-            }
-        }
-
-        startPlay();
-
-        // 点击暂停/播放
-        chartDom.addEventListener('click', () => {
-            if (timer) {
-                stopPlay();
-            } else {
-                startPlay();
-            }
-        });
-
-        window.addEventListener('resize', () => chart.resize());
-        return chart
-    },
 
     /**
      * 渲染分时折线图 - 板块资金流向分时曲线
@@ -888,5 +675,167 @@ const ChartRender = {
 
         render();
         return { dispose: () => { chartDom.innerHTML = ''; } };
+    },
+
+    /**
+     * 渲染板块走势图 - 多日趋势对比（柱状+折线组合）
+     * 柱状图：每日交易额(蓝)+净流入额(红/绿)
+     * 折线图：涨幅(%)，右Y轴
+     * 多板块叠加对比，颜色区分
+     * @param {HTMLElement} chartDom - 图表容器
+     * @param {Object} data - {dates, sectors, dailyData, sectorType}
+     */
+    renderTrendChart(chartDom, data) {
+        const chart = echarts.init(chartDom, 'dark');
+        const dates = data.dates || [];
+        const sectorNames = data.sectors || [];
+        const dailyData = data.dailyData || [];
+        const colors = ['#58a6ff', '#f85149', '#3fb950', '#d29922', '#bc8cff'];
+        const isSingle = sectorNames.length === 1;
+
+        // 构建series：每个板块一组柱(交易额+净流入) + 一条涨幅折线
+        const series = [];
+        sectorNames.forEach((name, idx) => {
+            const color = colors[idx % colors.length];
+            const turnoverData = dates.map(date => {
+                const day = dailyData.find(d => d.date === date);
+                return day && day.sectors[name] ? day.sectors[name].turnover : null;
+            });
+            const inflowData = dates.map(date => {
+                const day = dailyData.find(d => d.date === date);
+                return day && day.sectors[name] ? day.sectors[name].net_inflow : null;
+            });
+            const pctData = dates.map(date => {
+                const day = dailyData.find(d => d.date === date);
+                return day && day.sectors[name] ? day.sectors[name].change_pct : null;
+            });
+
+            // 单板块模式：显示交易额柱+净流入柱+涨幅线（完整3series）
+            // 多板块模式：只显示净流入柱+涨幅线（避免太乱，交易额在tooltip）
+            if (isSingle) {
+                // 交易额柱（蓝色半透明）
+                series.push({
+                    name: `${name}-成交额`,
+                    type: 'bar',
+                    yAxisIndex: 0,
+                    data: turnoverData,
+                    itemStyle: { color: 'rgba(88, 166, 255, 0.3)' },
+                    barGap: '10%',
+                    barCategoryGap: '40%'
+                });
+                // 净流入柱（红绿）
+                series.push({
+                    name: `${name}-净流入`,
+                    type: 'bar',
+                    yAxisIndex: 0,
+                    data: inflowData.map(v => ({
+                        value: v,
+                        itemStyle: { color: v >= 0 ? '#f85149' : '#3fb950' }
+                    })),
+                    itemStyle: { color: '#f85149' }
+                });
+            } else {
+                // 多板块：每个板块净流入柱用各自颜色
+                series.push({
+                    name: `${name}-净流入`,
+                    type: 'bar',
+                    yAxisIndex: 0,
+                    data: inflowData,
+                    itemStyle: { color: color },
+                    barGap: '20%',
+                    barCategoryGap: '40%'
+                });
+            }
+
+            // 涨幅折线（右Y轴）
+            series.push({
+                name: `${name}-涨幅`,
+                type: 'line',
+                yAxisIndex: 1,
+                data: pctData,
+                smooth: true,
+                symbol: 'circle',
+                symbolSize: 6,
+                lineStyle: { width: 2, color: color },
+                itemStyle: { color: color }
+            });
+        });
+
+        const option = {
+            backgroundColor: '#161b22',
+            title: {
+                text: `${data.sectorType === 'all' ? '全部板块' : (data.sectorType === 'industry' ? '行业板块' : '概念板块')} - 板块走势对比`,
+                subtext: `${dates[0]} ~ ${dates[dates.length - 1]} | ${sectorNames.length}个板块`,
+                left: 'center',
+                textStyle: { color: '#e6edf3', fontSize: 18 },
+                subtextStyle: { color: '#8b949e', fontSize: 14 }
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'cross' },
+                formatter: function(params) {
+                    const date = params[0].axisValue;
+                    let html = `<div style="font-weight:bold;margin-bottom:4px;">${date}</div>`;
+                    params.forEach(p => {
+                        const val = p.value;
+                        if (val === null || val === undefined) return;
+                        let valStr;
+                        if (p.seriesName.includes('涨幅')) {
+                            valStr = `${val >= 0 ? '+' : ''}${val.toFixed(2)}%`;
+                        } else {
+                            valStr = `${val.toFixed(2)}亿`;
+                        }
+                        html += `<div>${p.marker}${p.seriesName}: <b>${valStr}</b></div>`;
+                    });
+                    return html;
+                }
+            },
+            legend: {
+                top: 60,
+                textStyle: { color: '#8b949e' },
+                type: 'scroll'
+            },
+            grid: {
+                left: '5%',
+                right: '5%',
+                bottom: '8%',
+                top: '25%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: dates,
+                axisLine: { lineStyle: { color: '#30363d' } },
+                axisLabel: { color: '#8b949e' }
+            },
+            yAxis: [
+                {
+                    type: 'value',
+                    name: '金额(亿)',
+                    axisLine: { lineStyle: { color: '#30363d' } },
+                    axisLabel: { color: '#8b949e' },
+                    splitLine: { lineStyle: { color: '#21262d' } }
+                },
+                {
+                    type: 'value',
+                    name: '涨幅(%)',
+                    axisLine: { lineStyle: { color: '#30363d' } },
+                    axisLabel: {
+                        color: '#8b949e',
+                        formatter: '{value}%'
+                    },
+                    splitLine: { show: false }
+                }
+            ],
+            series: series,
+            dataZoom: [
+                { type: 'inside', start: 0, end: 100 },
+                { type: 'slider', start: 0, end: 100, height: 20, bottom: 10 }
+            ]
+        };
+
+        chart.setOption(option);
+        window.addEventListener('resize', () => chart.resize());
+        return chart;
     }
 };

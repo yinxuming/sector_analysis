@@ -12,6 +12,7 @@
     let lastRefreshTime = 0;    // 上次刷新数据的时间戳（毫秒）
     let intradayRefreshTimer = null;  // 分时图自动刷新定时器
     let isLoading = false;      // 数据加载中标志，防止自动刷新与手动刷新重叠
+    let trendSelectedSectors = []; // 走势图选中的对比板块（最多5个）
 
     /**
      * 获取当前板块类型对应的typeKey
@@ -104,27 +105,27 @@
     /**
      * 更新日期选择器组的可见性
      * 规则：
-     * - barRace隐藏所有日期选择器（需要多日数据，不需要选日期）
      * - intraday始终用单日期选择器（分时图只看单日）
-     * - "自定义"指标显示日期范围选择器（仅柱状图/热力图/桑基图/表格）
+     * - trend(板块走势)用日期范围选择器（多日趋势对比）
+     * - "自定义"指标显示日期范围选择器（仅柱状图/热力图/表格）
      * - 其他情况显示单日期选择器
      */
     function updateDatePickersVisibility() {
         const chartType = document.getElementById('chartType').value;
         const indicator = document.getElementById('indicator').value;
-        const isBarRace = chartType === 'barRace';
         const isIntraday = chartType === 'intraday';
+        const isTrend = chartType === 'trend';
         const isCustom = indicator === '自定义';
-        // barRace不需要日期选择器
-        if (isBarRace) {
-            document.getElementById('dateGroup').style.display = 'none';
-            document.getElementById('dateRangeGroup').style.display = 'none';
-            return;
-        }
         // intraday始终用单日期选择器
         if (isIntraday) {
             document.getElementById('dateGroup').style.display = 'inline-flex';
             document.getElementById('dateRangeGroup').style.display = 'none';
+            return;
+        }
+        // trend(板块走势)用日期范围选择器
+        if (isTrend) {
+            document.getElementById('dateGroup').style.display = 'none';
+            document.getElementById('dateRangeGroup').style.display = 'inline-flex';
             return;
         }
         // "自定义"指标：显示日期范围选择器，隐藏单日期选择器
@@ -147,10 +148,10 @@
             loadData();
         });
         document.getElementById('indicator').addEventListener('change', function() {
-            // "自定义"不支持分时图和动态排行，自动切换到柱状图
+            // "自定义"不支持分时图，自动切换到柱状图
             if (this.value === '自定义') {
                 const chartTypeEl = document.getElementById('chartType');
-                if (chartTypeEl.value === 'intraday' || chartTypeEl.value === 'barRace') {
+                if (chartTypeEl.value === 'intraday') {
                     chartTypeEl.value = 'bar';
                     // chartType的change事件会调用updateDatePickersVisibility + loadData
                     // 此时indicator已经是"自定义"，dateRangeGroup会正确显示
@@ -164,16 +165,18 @@
             startIntradayAutoRefresh();
         });
         document.getElementById('chartType').addEventListener('change', function() {
-            const isBarRace = this.value === 'barRace';
             // 获取完整分时按钮仅分时图显示
             const isIntraday = this.value === 'intraday';
             document.getElementById('intradayFullGroup').style.display = isIntraday ? 'inline-flex' : 'none';
             // 切换图表时，默认日期为今天
-            if (!isBarRace && !document.getElementById('intradayDate').value) {
+            if (!document.getElementById('intradayDate').value) {
                 document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
             }
-            // 时间指标在动态排行模式下隐藏（不需要）
-            document.getElementById('indicator').parentElement.style.display = isBarRace ? 'none' : 'inline-flex';
+            // 板块走势图隐藏时间指标（走势图自带日期范围），显示板块选择器
+            const isTrend = this.value === 'trend';
+            document.getElementById('indicator').parentElement.style.display = isTrend ? 'none' : 'inline-flex';
+            document.getElementById('trendSelector').style.display = isTrend ? 'block' : 'none';
+            if (isTrend) renderTrendTags();
             updateDatePickersVisibility();
             loadData();
             // 图表类型变化后重新评估自动刷新
@@ -197,6 +200,14 @@
         // 自定义日期段变化事件
         document.getElementById('startDate').addEventListener('change', loadData);
         document.getElementById('endDate').addEventListener('change', loadData);
+        // 走势图板块搜索
+        document.getElementById('trendSectorSearch').addEventListener('input', handleTrendSearch);
+        document.getElementById('trendSectorSearch').addEventListener('blur', function() {
+            // 延迟隐藏，让click事件先触发
+            setTimeout(() => {
+                document.getElementById('trendSearchResults').style.display = 'none';
+            }, 200);
+        });
         // 分时图自动刷新间隔选择
         document.getElementById('intradayRefreshInterval').addEventListener('change', function() {
             console.log(`刷新间隔变更为: ${this.value}秒`);
@@ -825,12 +836,12 @@
         }
 
         try {
-            if (chartType === 'barRace') {
-                // Bar Race需要特殊数据（仅本地JSON）
-                await loadBarRaceData(chartDom, sectorType);
-            } else if (chartType === 'intraday') {
+            if (chartType === 'intraday') {
                 // 分时图：优先东方财富API
                 await loadIntradayData(chartDom, sectorType);
+            } else if (chartType === 'trend') {
+                // 板块走势图：多日趋势对比（柱状+折线组合）
+                await loadTrendData(chartDom, sectorType);
             } else if (indicator === '自定义') {
                 // 自定义日期段：聚合多日intraday JSON数据
                 await loadCustomRangeData(chartDom, sectorType, chartType);
@@ -983,6 +994,216 @@
             sectors: sectors,
             source: 'custom_range_aggregate'
         };
+    }
+
+    /**
+     * 走势图：加载多日板块数据并渲染组合图（柱状+折线）
+     * 从intraday JSON提取每日汇总数据，缓存到localStorage（TTL 6小时）
+     * 支持多板块叠加对比（最多5个），通过trendSelector选择
+     * @param {HTMLElement} chartDom - 图表容器DOM
+     * @param {string} sectorType - 板块类型
+     */
+    async function loadTrendData(chartDom, sectorType) {
+        // 走势图选择器中没有板块时，默认添加已选板块中第一个
+        if (trendSelectedSectors.length === 0) {
+            const selectedNames = getSelectedSectorNames();
+            if (selectedNames && selectedNames.length > 0) {
+                trendSelectedSectors = [selectedNames[0]];
+            } else {
+                const merged = getMergedSectorList();
+                if (merged.preset && merged.preset.length > 0) {
+                    trendSelectedSectors = [merged.preset[0]];
+                }
+            }
+            renderTrendTags();
+        }
+
+        if (trendSelectedSectors.length === 0) {
+            chartDom.innerHTML = '<div style="text-align:center;padding:100px;color:#8b949e;">' +
+                '<h2>请选择板块</h2><p>在上方搜索框输入板块名称添加对比板块</p></div>';
+            return;
+        }
+
+        // 读取日期范围（默认最近30天）
+        let startDate = document.getElementById('startDate').value;
+        let endDate = document.getElementById('endDate').value;
+        const today = new Date().toISOString().slice(0, 10);
+        if (!endDate) endDate = today;
+        if (!startDate) {
+            const d = new Date();
+            d.setDate(d.getDate() - 29);
+            startDate = d.toISOString().slice(0, 10);
+            document.getElementById('startDate').value = startDate;
+            document.getElementById('endDate').value = endDate;
+        }
+        if (startDate > endDate) {
+            throw new Error('开始日期不能晚于结束日期');
+        }
+
+        // 生成日期列表
+        const dates = [];
+        let current = new Date(startDate);
+        const end = new Date(endDate);
+        while (current <= end) {
+            dates.push(current.toISOString().slice(0, 10));
+            current.setDate(current.getDate() + 1);
+        }
+
+        if (dates.length > 30) {
+            throw new Error('走势图最多展示30天数据，请缩小日期范围');
+        }
+
+        // 串行加载每日汇总数据（带随机间隔，避免请求过快）
+        const dailySummaries = []; // [{date, sectors: {name: {net_inflow, change_pct, turnover}}}]
+        for (let i = 0; i < dates.length; i++) {
+            const date = dates[i];
+            try {
+                const summary = await loadDailySummary(sectorType, date);
+                if (summary) {
+                    dailySummaries.push({ date, sectors: summary });
+                }
+            } catch (err) {
+                console.warn(`加载${date}汇总数据失败:`, err.message);
+            }
+            // 请求间加随机100-500ms间隔
+            if (i < dates.length - 1) {
+                await new Promise(r => setTimeout(r, 100 + Math.random() * 400));
+            }
+        }
+
+        if (dailySummaries.length === 0) {
+            chartDom.innerHTML = '<div style="text-align:center;padding:100px;color:#8b949e;">' +
+                '<h2>暂无走势数据</h2><p>所选日期范围内无已采集的分时数据</p>' +
+                '<p style="font-size:12px;margin-top:10px;">历史数据由每日收盘后自动采集</p></div>';
+            return;
+        }
+
+        // 渲染走势图
+        chartDom.style.height = '600px';
+        currentChart = ChartRender.renderTrendChart(chartDom, {
+            dates: dailySummaries.map(d => d.date),
+            sectors: trendSelectedSectors,
+            dailyData: dailySummaries,
+            sectorType: sectorType
+        });
+
+        document.getElementById('updateTime').textContent =
+            `板块走势 | ${dailySummaries.length}天数据 | ${startDate} ~ ${endDate}`;
+    }
+
+    /**
+     * 加载某日板块汇总数据（从intraday JSON提取，localStorage缓存）
+     * 缓存TTL 6小时，避免重复请求JSON文件
+     * @param {string} sectorType - 板块类型
+     * @param {string} date - 日期 YYYY-MM-DD
+     * @returns {Promise<Object|null>} {板块名: {net_inflow, change_pct, turnover}} 或null
+     */
+    async function loadDailySummary(sectorType, date) {
+        // 优先读缓存
+        const cacheKey = `daily_summary_${sectorType}_${date}`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            try {
+                const obj = JSON.parse(cached);
+                if (Date.now() - obj.ts < 6 * 3600 * 1000) {
+                    return obj.data;
+                }
+            } catch (e) { /* 缓存损坏，忽略 */ }
+        }
+
+        // 缓存未命中：fetch intraday JSON
+        // "全部"模式分别获取行业和概念后合并
+        if (sectorType === 'all') {
+            const [ind, con] = await Promise.all([
+                loadDailySummary('industry', date).catch(() => null),
+                loadDailySummary('concept', date).catch(() => null)
+            ]);
+            if (!ind && !con) return null;
+            return { ...(ind || {}), ...(con || {}) };
+        }
+
+        const filename = `intraday_${sectorType}_${date}.json`;
+        const data = await fetchJSON(CONFIG.dataPath + filename);
+        const summary = {};
+        (data.sectors || []).forEach(s => {
+            summary[s.name] = {
+                net_inflow: s.final_value || 0,
+                change_pct: s.change_pct || 0,
+                turnover: s.turnover_yi || 0
+            };
+        });
+
+        // 缓存到localStorage
+        try {
+            localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: summary }));
+        } catch (e) { /* localStorage满，忽略 */ }
+        return summary;
+    }
+
+    /**
+     * 渲染走势图已选板块标签
+     */
+    function renderTrendTags() {
+        const container = document.getElementById('trendSelectedTags');
+        const colors = ['#58a6ff', '#f85149', '#3fb950', '#d29922', '#bc8cff'];
+        if (trendSelectedSectors.length === 0) {
+            container.innerHTML = '<span class="trend-empty-hint">未选择板块，请在上方搜索添加</span>';
+            return;
+        }
+        container.innerHTML = trendSelectedSectors.map((name, i) => {
+            const color = colors[i % colors.length];
+            return `<span class="trend-tag"><span class="tag-color" style="background:${color}"></span>${name}<span class="tag-remove" data-name="${name}">✕</span></span>`;
+        }).join('');
+        // 绑定移除事件
+        container.querySelectorAll('.tag-remove').forEach(el => {
+            el.addEventListener('click', function() {
+                const name = this.getAttribute('data-name');
+                trendSelectedSectors = trendSelectedSectors.filter(s => s !== name);
+                renderTrendTags();
+                loadData();
+            });
+        });
+    }
+
+    /**
+     * 走势图板块搜索：过滤板块列表并显示搜索结果
+     */
+    function handleTrendSearch() {
+        const keyword = this.value.trim();
+        const resultsEl = document.getElementById('trendSearchResults');
+        if (!keyword) {
+            resultsEl.style.display = 'none';
+            return;
+        }
+        const merged = getMergedSectorList();
+        const allSectors = merged.all || [];
+        const matches = allSectors.filter(name =>
+            name.toLowerCase().includes(keyword.toLowerCase()) &&
+            !trendSelectedSectors.includes(name)
+        ).slice(0, 20);
+
+        if (matches.length === 0) {
+            resultsEl.innerHTML = '<div class="trend-search-item" style="color:#6e7681;cursor:default;">无匹配板块</div>';
+        } else {
+            resultsEl.innerHTML = matches.map(name =>
+                `<div class="trend-search-item" data-name="${name}">${name}</div>`
+            ).join('');
+            resultsEl.querySelectorAll('.trend-search-item').forEach(el => {
+                el.addEventListener('click', function() {
+                    const name = this.getAttribute('data-name');
+                    if (trendSelectedSectors.length >= 5) {
+                        alert('最多对比5个板块，请先移除部分板块');
+                        return;
+                    }
+                    trendSelectedSectors.push(name);
+                    document.getElementById('trendSectorSearch').value = '';
+                    resultsEl.style.display = 'none';
+                    renderTrendTags();
+                    loadData();
+                });
+            });
+        }
+        resultsEl.style.display = 'block';
     }
 
     /**
@@ -1314,46 +1535,15 @@
     }
 
     /**
-     * 加载Bar Race数据
-     * "全部"模式下合并行业和概念数据
-     */
-    async function loadBarRaceData(chartDom, sectorType) {
-        try {
-            if (sectorType === 'all') {
-                const [industryData, conceptData] = await Promise.all([
-                    fetchJSON(CONFIG.dataPath + 'bar_race_industry.json').catch(() => null),
-                    fetchJSON(CONFIG.dataPath + 'bar_race_concept.json').catch(() => null)
-                ]);
-                const data = mergeIndustryConceptData(industryData, conceptData);
-                if (!data) throw new Error('无数据');
-                currentChart = ChartRender.renderBarRace(chartDom, data);
-                document.getElementById('updateTime').textContent =
-                    `动态排行 | 共${data.dates ? data.dates.length : 0}天数据 | 点击暂停/播放`;
-            } else {
-                const filename = `bar_race_${sectorType}.json`;
-                const data = await fetchJSON(CONFIG.dataPath + filename);
-                currentChart = ChartRender.renderBarRace(chartDom, data);
-                document.getElementById('updateTime').textContent =
-                    `动态排行 | 共${data.dates ? data.dates.length : 0}天数据 | 点击暂停/播放`;
-            }
-        } catch (err) {
-            chartDom.innerHTML = '<div style="text-align:center;padding:100px;color:#8b949e;">' +
-                '<h2>暂无Bar Race数据</h2>' +
-                '<p>需要积累多日快照数据后才能展示动态排行</p>' +
-                '<p style="font-size:12px;margin-top:10px;">请先运行定时采集积累历史数据</p></div>';
-        }
-    }
-
-    /**
      * 根据数据量自适应图表容器高度
-     * 柱状图/桑基图：每个板块约28px + 标题和边距
-     * 热力图/分时图：使用默认高度
+     * 柱状图：每个板块约28px + 标题和边距
+     * 热力图/分时图/走势图：使用默认高度
      */
     function adjustChartHeight(chartDom, data, chartType) {
         const sectorCount = (data.sectors || []).length;
         let height;
 
-        if (chartType === 'bar' || chartType === 'sankey') {
+        if (chartType === 'bar') {
             // 横向柱状图：每个板块需要约28px高度，加上标题和边距
             height = Math.max(400, sectorCount * 28 + 80);
         } else if (chartType === 'heatmap') {
@@ -1365,7 +1555,7 @@
             // 表格：每行约32px + 表头40px + 标题30px + 边距
             height = Math.max(400, sectorCount * 32 + 120);
         } else {
-            // 分时图等：默认高度（调高20%）
+            // 分时图/走势图等：默认高度（调高20%）
             height = 720;
         }
 
@@ -1385,9 +1575,6 @@
                 break;
             case 'heatmap':
                 currentChart = ChartRender.renderHeatmap(chartDom, data);
-                break;
-            case 'sankey':
-                currentChart = ChartRender.renderSankey(chartDom, data);
                 break;
             case 'table':
                 currentChart = ChartRender.renderTable(chartDom, data);

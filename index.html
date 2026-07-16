@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>股票行业板块资金净流向分析</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-    <link rel="stylesheet" href="css/style.css?v=20260617j">
+    <link rel="stylesheet" href="css/style.css?v=20260715a">
 </head>
 <body>
     <div class="container">
@@ -41,9 +41,8 @@
                     <option value="bar">柱状图</option>
                     <option value="intraday" selected>分时图</option>
                     <option value="heatmap">热力图</option>
-                    <option value="sankey">桑基图</option>
-                    <option value="barRace">动态排行</option>
                     <option value="table">表格</option>
+                    <option value="trend">板块走势</option>
                 </select>
             </div>
             <div class="control-group">
@@ -123,6 +122,16 @@
             </div>
         </div>
 
+        <!-- 板块走势图选择器（仅走势图模式显示） -->
+        <div class="trend-selector" id="trendSelector" style="display:none;">
+            <div class="trend-selector-header">
+                <label>对比板块（最多5个）：</label>
+                <input type="text" id="trendSectorSearch" placeholder="搜索板块名称添加..." autocomplete="off" />
+            </div>
+            <div class="trend-selected-tags" id="trendSelectedTags"></div>
+            <div class="trend-search-results" id="trendSearchResults" style="display:none;"></div>
+        </div>
+
         <!-- 图表区域 -->
         <div class="chart-area">
             <div id="mainChart" class="chart-container"></div>
@@ -151,7 +160,7 @@
 
     <script src="js/config.js?v=20260630a"></script>
     <script src="js/eastmoney_api.js?v=20260702a"></script>
-    <script src="js/charts.js?v=20260702e"></script>
-    <script src="js/app.js?v=20260715a"></script>
+    <script src="js/charts.js?v=20260715a"></script>
+    <script src="js/app.js?v=20260715b"></script>
 </body>
 </html>
