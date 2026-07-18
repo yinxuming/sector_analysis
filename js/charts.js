@@ -710,20 +710,21 @@ const ChartRender = {
                 return day && day.sectors[name] ? day.sectors[name].change_pct : null;
             });
 
-            // 单板块模式：显示交易额柱+净流入柱+涨幅线（完整3series）
-            // 多板块模式：只显示净流入柱+涨幅线（避免太乱，交易额在tooltip）
+            // 单板块模式：成交额柱作为底柱（蓝色半透明），净流入柱覆盖其上（红绿）
+            // 多板块模式：只显示净流入柱+涨幅线（避免太乱，各板块成交额在tooltip）
             if (isSingle) {
-                // 交易额柱（蓝色半透明）
+                // 成交额底柱（蓝色半透明）
                 series.push({
                     name: `${name}-成交额`,
                     type: 'bar',
                     yAxisIndex: 0,
                     data: turnoverData,
                     itemStyle: { color: 'rgba(88, 166, 255, 0.3)' },
-                    barGap: '10%',
+                    z: 1,
+                    barGap: '-100%',
                     barCategoryGap: '40%'
                 });
-                // 净流入柱（红绿）
+                // 净流入覆盖柱（红绿），与成交额同位置显示
                 series.push({
                     name: `${name}-净流入`,
                     type: 'bar',
@@ -732,7 +733,9 @@ const ChartRender = {
                         value: v,
                         itemStyle: { color: v >= 0 ? '#f85149' : '#3fb950' }
                     })),
-                    itemStyle: { color: '#f85149' }
+                    z: 2,
+                    barGap: '-100%',
+                    barCategoryGap: '40%'
                 });
             } else {
                 // 多板块：每个板块净流入柱用各自颜色
@@ -822,9 +825,31 @@ const ChartRender = {
                     axisLine: { lineStyle: { color: '#30363d' } },
                     axisLabel: {
                         color: '#8b949e',
-                        formatter: '{value}%'
+                        formatter: function(value) {
+                            const key = value > 0 ? 'up' : (value < 0 ? 'down' : 'zero');
+                            return `{${key}|${value}%}`;
+                        },
+                        rich: {
+                            up: { color: '#f85149', fontWeight: 'bold' },
+                            down: { color: '#3fb950', fontWeight: 'bold' },
+                            zero: { color: '#8b949e', fontWeight: 'bold' }
+                        }
                     },
-                    splitLine: { show: false }
+                    // 0% 参考线用虚线+灰色，与正负区间明显区分
+                    splitLine: {
+                        show: true,
+                        lineStyle: {
+                            color: function(params) {
+                                return params.value === 0 ? '#8b949e' : '#21262d';
+                            },
+                            type: function(params) {
+                                return params.value === 0 ? 'dashed' : 'solid';
+                            },
+                            width: function(params) {
+                                return params.value === 0 ? 1.5 : 1;
+                            }
+                        }
+                    }
                 }
             ],
             series: series,

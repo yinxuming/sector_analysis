@@ -75,17 +75,40 @@
     /**
      * 初始化应用
      */
-    function init() {
+    /**
+     * 获取今天日期字符串 YYYY-MM-DD
+     */
+    function getTodayStr() {
+        return new Date().toISOString().slice(0, 10);
+    }
+
+    /**
+     * 判断指定日期是否为今天
+     * @param {string} dateStr YYYY-MM-DD
+     */
+    function isToday(dateStr) {
+        return dateStr === getTodayStr();
+    }
+
+    async function init() {
         bindEvents();
-        // 初始化日期选择器
+        // 初始化日期选择器：默认为最近一个交易日（含当日如果是交易日）
         const chartType = document.getElementById('chartType').value;
         const isIntraday = chartType === 'intraday';
         document.getElementById('intradayFullGroup').style.display = isIntraday ? 'inline-flex' : 'none';
         if (!document.getElementById('intradayDate').value) {
-            document.getElementById('intradayDate').value = new Date().toISOString().slice(0, 10);
+            try {
+                // 异步获取最近交易日（先加载节假日数据）
+                const latestTradeDate = await TradingCalendar.getLatestTradeDateAsync();
+                document.getElementById('intradayDate').value = latestTradeDate;
+                console.log(`默认日期设为最近交易日: ${latestTradeDate}`);
+            } catch (e) {
+                console.warn('交易日历加载失败，回退到今天:', e);
+                document.getElementById('intradayDate').value = getTodayStr();
+            }
         }
-        // 初始化自定义日期段默认值（默认最近7天）
-        const todayStr = new Date().toISOString().slice(0, 10);
+        // 初始化自定义日期段默认值（默认最近7天，截止到今天）
+        const todayStr = getTodayStr();
         const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
         if (!document.getElementById('startDate').value) {
             document.getElementById('startDate').value = weekAgo;
@@ -997,9 +1020,166 @@
     }
 
     /**
+     * 检查远程 JSON 文件是否存在（使用 HEAD 请求，不下载 body）
+     * @param {string} url - 文件 URL
+     * @returns {Promise<boolean>}
+     */
+    async function checkRemoteFileExists(url) {
+        try {
+            const response = await fetch(url, { method: 'HEAD', mode: 'cors' });
+            return response.ok;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * 扫描 localStorage 中已缓存的每日汇总数据，返回单个板块类型最早日期
+     * @param {string} type - 板块类型（industry/concept）
+     * @returns {string|null} 最早日期 YYYY-MM-DD
+     */
+    function getLocalTrendStartDateSingle(type) {
+        const prefix = `daily_summary_${type}_`;
+        let minDate = null;
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(prefix)) {
+                const date = key.slice(prefix.length);
+                if (!minDate || date < minDate) minDate = date;
+            }
+        }
+        return minDate;
+    }
+
+    /**
+     * 扫描 localStorage 已缓存的每日汇总数据，返回指定板块类型最早日期
+     * "全部"模式取行业/概念最早日期的较小值
+     * @param {string} sectorType - 板块类型
+     * @returns {string|null}
+     */
+    function getLocalTrendStartDate(sectorType) {
+        if (sectorType === 'all') {
+            const ind = getLocalTrendStartDateSingle('industry');
+            const con = getLocalTrendStartDateSingle('concept');
+            if (!ind) return con;
+            if (!con) return ind;
+            return ind < con ? ind : con;
+        }
+        return getLocalTrendStartDateSingle(sectorType);
+    }
+
+    /**
+     * 远程扫描发现最早有数据的分时日期
+     * 从昨天开始往前扫描最多 maxDays 天，分批并行检查
+     * @param {string} type - 板块类型（industry/concept）
+     * @param {number} maxDays - 最大扫描天数
+     * @param {number} batchSize - 每批并行检查天数
+     * @returns {Promise<string|null>}
+     */
+    async function findRemoteTrendStartDateSingle(type, maxDays, batchSize) {
+        const today = new Date();
+        let minDate = null;
+        for (let i = 1; i <= maxDays; i += batchSize) {
+            const batch = [];
+            for (let j = 0; j < batchSize && i + j <= maxDays; j++) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - (i + j));
+                batch.push(d.toISOString().slice(0, 10));
+            }
+            const results = await Promise.all(batch.map(date => {
+                const filename = `intraday_${type}_${date}.json`;
+                return checkRemoteFileExists(CONFIG.dataPath + filename);
+            }));
+            for (let j = 0; j < batch.length; j++) {
+                if (results[j] && (!minDate || batch[j] < minDate)) {
+                    minDate = batch[j];
+                }
+            }
+        }
+        return minDate;
+    }
+
+    /**
+     * 远程扫描发现最早有数据的分时日期
+     * "全部"模式分别扫描行业/概念，取较早日期
+     * @param {string} sectorType - 板块类型
+     * @param {number} maxDays - 最大扫描天数
+     * @param {number} batchSize - 每批并行检查天数
+     * @returns {Promise<string|null>}
+     */
+    async function findRemoteTrendStartDate(sectorType, maxDays, batchSize) {
+        maxDays = maxDays || 90;
+        batchSize = batchSize || 10;
+        if (sectorType === 'all') {
+            const [ind, con] = await Promise.all([
+                findRemoteTrendStartDateSingle('industry', maxDays, batchSize),
+                findRemoteTrendStartDateSingle('concept', maxDays, batchSize)
+            ]);
+            if (!ind) return con;
+            if (!con) return ind;
+            return ind < con ? ind : con;
+        }
+        return findRemoteTrendStartDateSingle(sectorType, maxDays, batchSize);
+    }
+
+    /**
+     * 获取板块走势图默认开始日期
+     * 优先级：缓存的起始日期 → localStorage已加载数据 → 远程扫描 → null
+     * @param {string} sectorType - 板块类型
+     * @returns {Promise<string|null>} 最早日期或null
+     */
+    async function getTrendStartDate(sectorType) {
+        const cacheKey = `trend_start_date_${sectorType}`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            try {
+                const obj = JSON.parse(cached);
+                if (Date.now() - obj.ts < 6 * 3600 * 1000) {
+                    return obj.value;
+                }
+            } catch (e) { /* 缓存损坏，忽略 */ }
+        }
+        const localMin = getLocalTrendStartDate(sectorType);
+        if (localMin) {
+            localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), value: localMin }));
+            return localMin;
+        }
+        const remoteMin = await findRemoteTrendStartDate(sectorType);
+        if (remoteMin) {
+            localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), value: remoteMin }));
+            return remoteMin;
+        }
+        return null;
+    }
+
+    /**
+     * 更新板块走势图起始日期缓存
+     * 如果本次加载到了更早的数据，更新缓存
+     * @param {string} sectorType - 板块类型
+     * @param {string} loadedMinDate - 本次加载到的最早日期
+     */
+    function updateTrendStartDateCache(sectorType, loadedMinDate) {
+        const cacheKey = `trend_start_date_${sectorType}`;
+        let shouldUpdate = true;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            try {
+                const obj = JSON.parse(cached);
+                if (obj.value && obj.value <= loadedMinDate) {
+                    shouldUpdate = false;
+                }
+            } catch (e) { /* 忽略 */ }
+        }
+        if (shouldUpdate) {
+            localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), value: loadedMinDate }));
+        }
+    }
+
+    /**
      * 走势图：加载多日板块数据并渲染组合图（柱状+折线）
      * 从intraday JSON提取每日汇总数据，缓存到localStorage（TTL 6小时）
      * 支持多板块叠加对比（最多5个），通过trendSelector选择
+     * 默认开始日期：优先使用已缓存数据中最早日期，未缓存时回退到最近30天
      * @param {HTMLElement} chartDom - 图表容器DOM
      * @param {string} sectorType - 板块类型
      */
@@ -1024,20 +1204,38 @@
             return;
         }
 
-        // 读取日期范围（默认最近30天）
+        // 读取日期范围
+        // 默认开始日期：优先使用已缓存数据中最早日期（含本地localStorage和远程扫描结果），未获取到时回退到最近30天
         let startDate = document.getElementById('startDate').value;
         let endDate = document.getElementById('endDate').value;
         const today = new Date().toISOString().slice(0, 10);
         if (!endDate) endDate = today;
         if (!startDate) {
-            const d = new Date();
-            d.setDate(d.getDate() - 29);
-            startDate = d.toISOString().slice(0, 10);
+            const cachedStart = await getTrendStartDate(sectorType);
+            if (cachedStart) {
+                startDate = cachedStart;
+                console.log(`走势图默认开始日期（缓存数据最早日期）: ${startDate}`);
+            } else {
+                const d = new Date();
+                d.setDate(d.getDate() - 29);
+                startDate = d.toISOString().slice(0, 10);
+                console.log(`走势图默认开始日期（无缓存数据，回退30天）: ${startDate}`);
+            }
             document.getElementById('startDate').value = startDate;
             document.getElementById('endDate').value = endDate;
         }
         if (startDate > endDate) {
             throw new Error('开始日期不能晚于结束日期');
+        }
+
+        // 限制最大展示30天：若默认缓存起始日期距离结束日期超过30天，则截取最近30天
+        const maxStart = new Date(endDate);
+        maxStart.setDate(maxStart.getDate() - 29);
+        const maxStartStr = maxStart.toISOString().slice(0, 10);
+        if (startDate < maxStartStr) {
+            startDate = maxStartStr;
+            document.getElementById('startDate').value = startDate;
+            console.log(`走势图起始日期超过30天上限，截断为: ${startDate}`);
         }
 
         // 生成日期列表
@@ -1077,6 +1275,10 @@
                 '<p style="font-size:12px;margin-top:10px;">历史数据由每日收盘后自动采集</p></div>';
             return;
         }
+
+        // 更新走势图起始日期缓存（如果本次加载到了更早的数据）
+        const loadedMinDate = dailySummaries[0].date;
+        updateTrendStartDateCache(sectorType, loadedMinDate);
 
         // 渲染走势图
         chartDom.style.height = '600px';
@@ -1328,18 +1530,21 @@
 
     /**
      * 加载单个板块类型的分时数据
-     * 数据优先级：前端缓存(localStorage) → 东方财富API → 本地JSON文件
-     * API获取成功后自动缓存到localStorage，避免频繁请求
+     * 数据优先级：前端缓存(localStorage) → dataPath JSON → 东方财富API
+     * dataPath 由 config.js 根据访问域名动态决定：
+     *   - 本地服务（localhost/局域网IP）：指向 GitHub Pages 在线缓存（本地 web/data/ 可能不全或旧）
+     *   - GitHub Pages 部署：指向相对路径 ./data/（即自身仓库 data/ 目录）
+     * 今日数据：dataPath JSON 不可用时 fallback 到 API；API 成功后缓存到 localStorage
+     * 历史数据：仅从 dataPath JSON 获取（历史数据由定时任务采集，无 API fallback）
      * @returns {Promise<Object|null>} 分时数据对象，失败返回null
      */
     async function loadIntradayDataSingle(chartDom, sectorType) {
         let data = null;
-        const selectedDate = document.getElementById('intradayDate').value || new Date().toISOString().slice(0, 10);
-        const today = new Date().toISOString().slice(0, 10);
-        const isToday = selectedDate === today;
+        const selectedDate = document.getElementById('intradayDate').value || getTodayStr();
+        const todayFlag = isToday(selectedDate);
 
         // 今天的数据：优先尝试前端缓存（未过期），命中则直接使用
-        if (isToday) {
+        if (todayFlag) {
             const cached = loadIntradayCache(sectorType, selectedDate);
             if (cached) {
                 data = cached;
@@ -1347,8 +1552,25 @@
             }
         }
 
-        // 缓存未命中：尝试东方财富API（实时分钟级数据）
-        if (!data && isToday) {
+        // 缓存未命中：尝试 dataPath JSON（今日或历史日期）
+        // dataPath 在本地服务时指向 GitHub Pages 在线缓存，避免依赖本地可能不全的数据
+        if (!data) {
+            try {
+                const filename = `intraday_${sectorType}_${selectedDate}.json`;
+                data = await fetchJSON(CONFIG.dataPath + filename);
+                console.log(`分时图数据来源(${sectorType}): dataPath JSON (${selectedDate}) ${CONFIG.dataPath}`);
+            } catch (err) {
+                if (!todayFlag) {
+                    // 历史日期 dataPath JSON 必存在，失败直接返回
+                    console.warn(`dataPath 分时数据加载失败(${sectorType}, ${selectedDate}):`, err.message);
+                    return null;
+                }
+                console.log(`dataPath 无今日分时数据(${sectorType})，回退到东方财富API`);
+            }
+        }
+
+        // 今日数据API获取（仅当本地JSON不可用时）
+        if (!data && todayFlag) {
             try {
                 const topN = getTopNValue() === -1 ? 500 : (getTopNValue() || 30);
                 const selectedNames = getFilterParam();
@@ -1359,18 +1581,7 @@
                     saveIntradayCache(sectorType, selectedDate, data);
                 }
             } catch (err) {
-                console.warn(`东方财富API获取${sectorType}分时数据失败，尝试本地JSON:`, err);
-            }
-        }
-
-        // Fallback: 本地JSON数据（今天或历史日期）
-        if (!data) {
-            try {
-                const filename = `intraday_${sectorType}_${selectedDate}.json`;
-                data = await fetchJSON(CONFIG.dataPath + filename);
-                console.log(`分时图数据来源(${sectorType}): 本地JSON (${selectedDate})`);
-            } catch (err) {
-                console.warn(`本地分时数据加载失败(${sectorType}, ${selectedDate}):`, err.message);
+                console.warn(`东方财富API获取${sectorType}分时数据失败:`, err);
                 return null;
             }
         }
@@ -1391,8 +1602,8 @@
     }
 
     /**
-     * 加载实时排名数据（柱状图/热力图/桑基图/表格）
-     * 今日：优先东方财富API，fallback本地JSON
+     * 加载实时排名数据（柱状图/热力图/表格）
+     * 今日：优先本地JSON，fallback到东方财富API（仅"今日"指标）
      * 历史日期：从分时数据文件提取最终值作为该日期的排名数据
      * "全部"模式下分别获取行业和概念数据后合并
      */
@@ -1423,6 +1634,12 @@
 
     /**
      * 加载单个板块类型的实时排名数据
+     * 数据优先级：dataPath JSON → 东方财富API（仅"今日"指标 fallback）
+     * dataPath 由 config.js 根据访问域名动态决定：
+     *   - 本地服务：指向 GitHub Pages 在线缓存（本地 web/data/ 可能不全或旧）
+     *   - GitHub Pages 部署：指向相对路径 ./data/
+     * 历史日期：从分时数据文件提取最终值作为该日期的排名数据
+     * "全部"模式下分别获取行业和概念数据后合并
      * @param {string} sectorType - 板块类型
      * @param {string} indicator - 时间指标
      * @param {boolean} isToday - 是否为今天
@@ -1431,8 +1648,38 @@
     async function loadRealtimeDataSingle(sectorType, indicator, isToday) {
         let data = null;
 
-        // 今日数据优先使用东方财富API
-        if (isToday && indicator === '今日') {
+        // dataPath JSON 优先：本地服务时读取 GitHub Pages 在线缓存，避免频繁请求东方财富API
+        // GitHub Pages 部署时 dataPath 为相对路径，今日数据若未被定时任务更新则 404 fallback 到 API
+        try {
+            if (isToday) {
+                // 今天：读取实时/一周数据文件
+                let filename;
+                if (indicator === '一周') {
+                    filename = `weekly_${sectorType}_${getTodayStr()}.json`;
+                } else {
+                    filename = `realtime_${sectorType}_${indicator}.json`;
+                }
+                data = await fetchJSON(CONFIG.dataPath + filename);
+                console.log(`实时数据来源(${sectorType}): dataPath JSON ${CONFIG.dataPath}`);
+            } else {
+                // 历史日期：从分时数据文件提取最终值作为该日期的排名数据
+                const selectedDate = document.getElementById('intradayDate').value;
+                const filename = `intraday_${sectorType}_${selectedDate}.json`;
+                const intradayData = await fetchJSON(CONFIG.dataPath + filename);
+                data = convertIntradayToRealtime(intradayData, selectedDate);
+                console.log(`实时数据来源(${sectorType}): dataPath 分时JSON (${selectedDate})`);
+            }
+        } catch (err) {
+            if (!isToday || indicator !== '今日') {
+                // 历史日期或非今日指标 dataPath JSON 必存在，失败直接返回null
+                console.warn(`dataPath 数据加载失败(${sectorType}):`, err.message);
+                return null;
+            }
+            console.log(`dataPath 无今日${indicator}数据(${sectorType})，回退到东方财富API`);
+        }
+
+        // 今日+今日指标：dataPath JSON 不可用时 fallback 到东方财富API
+        if (!data && isToday && indicator === '今日') {
             try {
                 const selectedNames = getFilterParam();
                 data = await EastMoneyAPI.buildRealtimeData(sectorType, selectedNames);
@@ -1440,34 +1687,7 @@
                     console.log(`实时数据来源(${sectorType}): 东方财富API`);
                 }
             } catch (err) {
-                console.warn(`东方财富API获取${sectorType}实时数据失败，尝试本地JSON:`, err);
-            }
-        }
-
-        // Fallback: 本地JSON数据
-        if (!data) {
-            try {
-                if (isToday) {
-                    // 今天：读取实时/一周数据文件
-                    let filename;
-                    if (indicator === '一周') {
-                        const today = new Date().toISOString().slice(0, 10);
-                        filename = `weekly_${sectorType}_${today}.json`;
-                    } else {
-                        filename = `realtime_${sectorType}_${indicator}.json`;
-                    }
-                    data = await fetchJSON(CONFIG.dataPath + filename);
-                    console.log(`实时数据来源(${sectorType}): 本地JSON`);
-                } else {
-                    // 历史日期：从分时数据文件提取最终值作为该日期的排名数据
-                    const selectedDate = document.getElementById('intradayDate').value;
-                    const filename = `intraday_${sectorType}_${selectedDate}.json`;
-                    const intradayData = await fetchJSON(CONFIG.dataPath + filename);
-                    data = convertIntradayToRealtime(intradayData, selectedDate);
-                    console.log(`实时数据来源(${sectorType}): 本地分时JSON (${selectedDate})`);
-                }
-            } catch (err) {
-                console.warn(`本地数据加载失败(${sectorType}):`, err.message);
+                console.warn(`东方财富API获取${sectorType}实时数据失败:`, err);
                 return null;
             }
         }

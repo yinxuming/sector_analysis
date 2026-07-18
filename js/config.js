@@ -3,7 +3,30 @@
  */
 const CONFIG = {
     // 数据文件路径
-    dataPath: './data/',
+    // - GitHub Pages 部署：使用相对路径 './data/'（即自身仓库的 data/ 目录）
+    // - 本地启动服务测试：使用 GitHub Pages 在线缓存（本地 web/data/ 数据可能不全或旧）
+    //   URL 参数 ?localData=1 可强制使用本地数据（用于测试本地刚采集的数据）
+    // - GitHub Pages 支持 CORS，本地服务可跨域请求在线 JSON
+    dataPath: (function () {
+        // URL 参数 ?localData=1 强制使用本地数据
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('localData') === '1') {
+            return './data/';
+        }
+        const host = window.location.hostname;
+        // 本地服务（localhost/127.0.0.1/局域网IP）：从 GitHub Pages 在线缓存获取
+        const isLocalHost =
+            host === 'localhost' ||
+            host === '127.0.0.1' ||
+            /^192\.168\./.test(host) ||
+            /^10\./.test(host) ||
+            /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host);
+        if (isLocalHost) {
+            return 'https://yinxuming.github.io/sector_analysis/data/';
+        }
+        // GitHub Pages 部署：使用相对路径
+        return './data/';
+    })(),
 
     // 东方财富API代理配置
     // 直连 push2.eastmoney.com 在部分网络环境下会被拦截，通过代理中转解决
