@@ -236,6 +236,22 @@
             console.log(`刷新间隔变更为: ${this.value}秒`);
             startIntradayAutoRefresh();
         });
+        // 分时图趋势筛选变化时重新加载数据
+        document.getElementById('intradayTrendFilter').addEventListener('change', function() {
+            if (document.getElementById('chartType').value === 'intraday') {
+                loadData();
+            }
+        });
+        document.getElementById('intradayTrendMinutes').addEventListener('change', function() {
+            // 限制输入范围 1-240
+            let val = parseInt(this.value, 10);
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > 240) val = 240;
+            this.value = val;
+            if (document.getElementById('chartType').value === 'intraday') {
+                loadData();
+            }
+        });
         document.getElementById('btnRefresh').addEventListener('click', loadData);
 
         // 获取完整分时数据按钮
@@ -1176,6 +1192,18 @@
     }
 
     /**
+     * 获取分时图趋势筛选选项
+     * @returns {{trendFilter: string, trendMinutes: number}}
+     */
+    function getIntradayTrendOptions() {
+        const trendFilter = document.getElementById('intradayTrendFilter').value || 'all';
+        let trendMinutes = parseInt(document.getElementById('intradayTrendMinutes').value, 10);
+        if (isNaN(trendMinutes) || trendMinutes < 1) trendMinutes = 10;
+        if (trendMinutes > 240) trendMinutes = 240;
+        return { trendFilter, trendMinutes };
+    }
+
+    /**
      * 走势图：加载多日板块数据并渲染组合图（柱状+折线）
      * 从intraday JSON提取每日汇总数据，缓存到localStorage（TTL 6小时）
      * 支持多板块叠加对比（最多5个），通过trendSelector选择
@@ -1517,7 +1545,7 @@
             }
             const filteredData = filterDataBySectors(data);
             adjustChartHeight(chartDom, filteredData, 'intraday');
-            currentChart = ChartRender.renderIntradayChart(chartDom, filteredData);
+            currentChart = ChartRender.renderIntradayChart(chartDom, filteredData, getIntradayTrendOptions());
             const timeStr = data.update_time || '';
             const pointCount = data.times ? data.times.length : 0;
             document.getElementById('updateTime').textContent =
@@ -1590,7 +1618,7 @@
         if (getTypeKey() !== 'all') {
             const filteredData = filterDataBySectors(data);
             adjustChartHeight(chartDom, filteredData, 'intraday');
-            currentChart = ChartRender.renderIntradayChart(chartDom, filteredData);
+            currentChart = ChartRender.renderIntradayChart(chartDom, filteredData, getIntradayTrendOptions());
             const timeStr = data.update_time || '';
             const pointCount = data.times ? data.times.length : 0;
             const sourceTag = data.source === 'eastmoney' ? ' [东方财富API]' : ' [本地数据]';

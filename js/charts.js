@@ -208,12 +208,19 @@ const ChartRender = {
      * 渲染分时折线图 - 板块资金流向分时曲线
      * 每个板块一条折线，X轴为交易时间，Y轴为累计净流入金额
      * 右侧末端标签显示板块名称(涨幅)+净流入，防重叠依次展开
+     * 支持趋势筛选：根据最近N分钟首尾点斜率，只显示上升/下降趋势的曲线
+     * @param {HTMLElement} chartDom - 图表容器DOM
+     * @param {Object} data - 分时数据
+     * @param {Object} options - 趋势筛选选项 { trendFilter: 'all'|'rise'|'fall', trendMinutes: number }
      */
-    renderIntradayChart(chartDom, data) {
+    renderIntradayChart(chartDom, data, options) {
         const chart = echarts.init(chartDom, 'dark');
         const times = data.times || [];
         const sectors = data.sectors || [];
         const displaySectors = sectors;
+        options = options || {};
+        const trendFilter = options.trendFilter || 'all';
+        const trendMinutes = Math.max(1, Math.min(240, options.trendMinutes || 10));
 
         if (times.length === 0 || displaySectors.length === 0) {
             chart.showLoading({ text: '暂无分时数据\n需在交易时段运行定时采集积累数据' });
@@ -232,15 +239,61 @@ const ChartRender = {
             '#f778ba', '#ff9bce', '#db61a2'        // 粉色系
         ];
 
+        // 趋势筛选：计算每个板块最近N分钟首尾点斜率，判断上升/下降
+        // slope > 0 为上升，slope < 0 为下降；数据点不足或斜率为0时不匹配上升/下降筛选
+        const trendMatch = new Array(displaySectors.length).fill(true);
+        if (trendFilter !== 'all') {
+            displaySectors.forEach((s, i) => {
+                const dataArr = s.data || [];
+                const n = Math.min(trendMinutes, dataArr.length);
+                if (n < 2) {
+                    trendMatch[i] = false;
+                    return;
+                }
+                const recent = dataArr.slice(-n);
+                // 找到首尾有效值（跳过null/undefined）
+                let firstVal = null;
+                let lastVal = null;
+                for (let k = 0; k < recent.length && firstVal === null; k++) {
+                    if (recent[k] !== null && recent[k] !== undefined) firstVal = recent[k];
+                }
+                for (let k = recent.length - 1; k >= 0 && lastVal === null; k--) {
+                    if (recent[k] !== null && recent[k] !== undefined) lastVal = recent[k];
+                }
+                if (firstVal === null || lastVal === null) {
+                    trendMatch[i] = false;
+                    return;
+                }
+                const slope = lastVal - firstVal;
+                if (trendFilter === 'rise') {
+                    trendMatch[i] = slope > 0;
+                } else if (trendFilter === 'fall') {
+                    trendMatch[i] = slope < 0;
+                }
+            });
+            const matchedCount = trendMatch.filter(Boolean).length;
+            console.log(`分时图趋势筛选[${trendFilter}/${trendMinutes}分钟]: 匹配 ${matchedCount}/${displaySectors.length} 个板块`);
+        }
+
         // 计算Y轴范围（留出标签空间）
         let maxVal = -Infinity;
         let minVal = Infinity;
-        displaySectors.forEach(s => {
+        displaySectors.forEach((s, i) => {
+            if (!trendMatch[i]) return; // 趋势筛选不匹配的数据不参与Y轴范围计算
             s.data.forEach(v => {
                 if (v !== null && v > maxVal) maxVal = v;
                 if (v !== null && v < minVal) minVal = v;
             });
         });
+        // 若全部不匹配，回退到全部数据计算范围，避免空范围
+        if (maxVal === -Infinity || minVal === Infinity) {
+            displaySectors.forEach(s => {
+                s.data.forEach(v => {
+                    if (v !== null && v > maxVal) maxVal = v;
+                    if (v !== null && v < minVal) minVal = v;
+                });
+            });
+        }
         const padding = Math.max(Math.abs(maxVal - minVal) * 0.15, 10);
         const yMin = Math.floor(minVal - padding);
         const yMax = Math.ceil(maxVal + padding);
@@ -292,6 +345,7 @@ const ChartRender = {
         }
 
         // 构建series，应用偏移和板块名(涨幅)格式
+        // 趋势筛选不匹配的数据初始淡化显示（复用点击聚焦的隐藏效果）
         const finalSeries = displaySectors.map((sector, index) => {
             const color = colorPool[index % colorPool.length];
             const isPositive = sector.final_value >= 0;
@@ -301,6 +355,19 @@ const ChartRender = {
             const valStr = sector.final_value >= 0 ? `+${sector.final_value.toFixed(2)}` : `${sector.final_value.toFixed(2)}`;
             const valColor = isPositive ? '#f85149' : '#3fb950';
             const pctColor = changePct >= 0 ? '#f85149' : '#3fb950';
+            const isMatched = trendMatch[index];
+            const dimColor = '#484f58';
+            const labelColors = isMatched ? {
+                name: '#e6edf3',
+                pct: pctColor,
+                val: valColor,
+                turnover: '#58a6ff'
+            } : {
+                name: dimColor,
+                pct: dimColor,
+                val: dimColor,
+                turnover: dimColor
+            };
 
             return {
                 name: sector.name,
@@ -309,13 +376,13 @@ const ChartRender = {
                 smooth: false,
                 symbol: 'none',
                 triggerLineEvent: true,  // symbol为none时仍需响应曲线点击事件
-                lineStyle: { width: 1.5, color: color },
+                lineStyle: { width: isMatched ? 1.5 : 1, color: color, opacity: isMatched ? 1 : 0.15 },
                 itemStyle: { color: color },
                 // 末端标签：与tooltip格式一致，富文本实现红涨绿跌
                 markPoint: {
                     symbol: 'circle',
-                    symbolSize: 8,
-                    itemStyle: { color: color },
+                    symbolSize: isMatched ? 8 : 6,
+                    itemStyle: { color: color, opacity: isMatched ? 1 : 0.15 },
                     label: {
                         show: true,
                         position: 'right',
@@ -326,11 +393,12 @@ const ChartRender = {
                             `{turnover|${turnoverYi.toFixed(1)}亿}`
                         ].join(''),
                         fontSize: 10,
+                        fontWeight: 'normal',
                         rich: {
-                            name: { color: '#e6edf3', fontSize: 10, fontWeight: 'normal' },
-                            pct: { color: pctColor, fontSize: 10, fontWeight: 'normal' },
-                            val: { color: valColor, fontSize: 10, fontWeight: 'normal' },
-                            turnover: { color: '#58a6ff', fontSize: 10 }
+                            name: { color: labelColors.name, fontSize: 10, fontWeight: 'normal' },
+                            pct: { color: labelColors.pct, fontSize: 10, fontWeight: 'normal' },
+                            val: { color: labelColors.val, fontSize: 10, fontWeight: 'normal' },
+                            turnover: { color: labelColors.turnover, fontSize: 10, fontWeight: 'normal' }
                         },
                         offset: [0, labelOffsets[index]]
                     },
@@ -483,6 +551,7 @@ const ChartRender = {
 
         /**
          * 更新曲线聚焦状态：focusedIndex对应的曲线加粗高亮，其余淡化
+         * 趋势筛选不匹配的曲线始终保持淡化，不受聚焦状态影响
          * @param {number} focusIdx - 聚焦的series索引，-1恢复全部
          */
         function updateFocusState(focusIdx) {
@@ -495,9 +564,17 @@ const ChartRender = {
                 const valStr = sector.final_value >= 0 ? `+${sector.final_value.toFixed(2)}` : `${sector.final_value.toFixed(2)}`;
                 const valColor = isPositive ? '#f85149' : '#3fb950';
                 const pctColor = changePct >= 0 ? '#f85149' : '#3fb950';
+                const isMatched = trendMatch[i];
+                const dimColor = '#484f58';
 
                 let lineWidth, lineOpacity, labelColors, fontWeight;
-                if (focusIdx === -1 || i === focusIdx) {
+                if (!isMatched) {
+                    // 趋势筛选不匹配：始终保持淡化
+                    lineWidth = 1;
+                    lineOpacity = 0.15;
+                    labelColors = { name: dimColor, pct: dimColor, val: dimColor, turnover: dimColor };
+                    fontWeight = 'normal';
+                } else if (focusIdx === -1 || i === focusIdx) {
                     // 全部显示 或 聚焦曲线：原色+正常/加粗
                     lineWidth = focusIdx === -1 ? 1.5 : 3;
                     lineOpacity = 1;
@@ -512,7 +589,7 @@ const ChartRender = {
                     // 非聚焦曲线：淡化
                     lineWidth = 1;
                     lineOpacity = 0.15;
-                    labelColors = { name: '#484f58', pct: '#484f58', val: '#484f58', turnover: '#484f58' };
+                    labelColors = { name: dimColor, pct: dimColor, val: dimColor, turnover: dimColor };
                     fontWeight = 'normal';
                 }
 
@@ -527,7 +604,7 @@ const ChartRender = {
                     itemStyle: { color: color },
                     markPoint: {
                         symbol: 'circle',
-                        symbolSize: focusIdx === i ? 10 : 8,
+                        symbolSize: focusIdx === i ? 10 : (isMatched ? 8 : 6),
                         itemStyle: { color: color, opacity: lineOpacity },
                         label: {
                             show: true,
