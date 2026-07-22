@@ -220,7 +220,7 @@ const ChartRender = {
         const displaySectors = sectors;
         options = options || {};
         const trendFilter = options.trendFilter || 'all';
-        const trendMinutes = Math.max(1, Math.min(240, options.trendMinutes || 10));
+        const trendMinutes = Math.max(1, Math.min(240, options.trendMinutes || 5));
 
         if (times.length === 0 || displaySectors.length === 0) {
             chart.showLoading({ text: '暂无分时数据\n需在交易时段运行定时采集积累数据' });
