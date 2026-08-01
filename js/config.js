@@ -53,6 +53,11 @@ const CONFIG = {
         chartType: 'intraday',
         topN: 30
     },
+
+    // 预设板块同步：源码仓库地址（owner/repo），用于生成 Issue 链接
+    // 用户在前端勾选了非预设板块时，可一键生成 Issue 提议新增到定时任务预设板块
+    // 权限控制：任何用户可提交 Issue，仅协作者可添加 sync-sectors 标签审批触发同步
+    syncSectorsRepo: 'yinxuming/sector_analysis_src',
     // 颜色配置
     colors: {
         inflow: '#f85149',       // 红色-净流入

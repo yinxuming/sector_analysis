@@ -282,6 +282,7 @@
         });
         document.getElementById('btnExport').addEventListener('click', exportSelectedSectors);
         document.getElementById('btnImport').addEventListener('click', importSelectedSectors);
+        document.getElementById('btnSyncSectors').addEventListener('click', syncToPresetSectors);
         document.getElementById('importFile').addEventListener('change', handleImportFile);
         document.getElementById('sectorSearch').addEventListener('input', filterSectors);
 
@@ -588,6 +589,106 @@
         a.download = `sector_selection_${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
+    }
+
+    /**
+     * 同步非预设板块到定时任务
+     * 检测用户已选但不在预设列表中的板块，生成 GitHub Issue 链接提交同步请求
+     * 权限控制：任何用户可提交 Issue，仅协作者可添加 sync-sectors 标签审批触发同步工作流
+     */
+    function syncToPresetSectors() {
+        if (!sectorListData) {
+            alert('板块列表未加载，请稍后再试');
+            return;
+        }
+
+        if (!CONFIG.syncSectorsRepo) {
+            alert('未配置源码仓库地址（CONFIG.syncSectorsRepo），无法生成 Issue 链接');
+            return;
+        }
+
+        // 获取已选板块（同时处理"全部"模式的 _行 后缀拆分）
+        let industrySelected = [];
+        let conceptSelected = [];
+        const industrySaved = localStorage.getItem('selectedSectors_industry');
+        const conceptSaved = localStorage.getItem('selectedSectors_concept');
+        if (industrySaved) {
+            try { industrySelected = JSON.parse(industrySaved); } catch(e) { industrySelected = []; }
+        }
+        if (conceptSaved) {
+            try { conceptSelected = JSON.parse(conceptSaved); } catch(e) { conceptSelected = []; }
+        }
+
+        // "全部"模式下从 selectedSectors_all 拆分（覆盖上面的值，更准确）
+        const typeKey = getTypeKey();
+        if (typeKey === 'all') {
+            const allSaved = localStorage.getItem('selectedSectors_all');
+            if (allSaved) {
+                try {
+                    const allNames = JSON.parse(allSaved);
+                    industrySelected = [];
+                    conceptSelected = [];
+                    allNames.forEach(name => {
+                        const parsed = parseDisplayName(name);
+                        if (parsed.type === 'industry') {
+                            industrySelected.push(parsed.name);
+                        } else {
+                            conceptSelected.push(parsed.name);
+                        }
+                    });
+                } catch(e) {}
+            }
+        }
+
+        // 获取预设板块列表
+        const industryPreset = sectorListData.industry?.preset || [];
+        const conceptPreset = sectorListData.concept?.preset || [];
+
+        // 找出非预设板块（已选但不在预设列表中）
+        const industryPresetSet = new Set(industryPreset);
+        const conceptPresetSet = new Set(conceptPreset);
+        const newIndustry = industrySelected.filter(name => !industryPresetSet.has(name));
+        const newConcept = conceptSelected.filter(name => !conceptPresetSet.has(name));
+
+        const totalCount = newIndustry.length + newConcept.length;
+        if (totalCount === 0) {
+            alert('当前已选板块均在预设列表中，无需同步');
+            return;
+        }
+
+        // 构建提交数据（只包含有新增板块的类型）
+        const syncData = {};
+        if (newIndustry.length > 0) syncData['行业板块'] = newIndustry;
+        if (newConcept.length > 0) syncData['概念板块'] = newConcept;
+
+        // 生成 Issue body
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const jsonStr = JSON.stringify(syncData, null, 2);
+        const body = [
+            `## 板块同步请求`,
+            ``,
+            `以下板块需要添加到定时任务预设板块中，以便定时任务能自动采集其数据。`,
+            ``,
+            `### 新增板块（共 ${totalCount} 个）`,
+            ``,
+            '```json',
+            jsonStr,
+            '```',
+            ``,
+            `---`,
+            `> 提交时间: ${dateStr}`,
+            `> 此 Issue 由前端"同步预设"按钮自动生成，添加 \`sync-sectors\` 标签后将自动触发同步工作流。`,
+        ].join('\n');
+
+        // 生成 GitHub Issue URL
+        const title = `[板块同步] 新增预设板块 - ${dateStr}`;
+        const issueUrl = `https://github.com/${CONFIG.syncSectorsRepo}/issues/new` +
+            `?title=${encodeURIComponent(title)}` +
+            `&body=${encodeURIComponent(body)}` +
+            `&labels=sync-sectors`;
+
+        // 打开 Issue 创建页面
+        window.open(issueUrl, '_blank');
     }
 
     /**
