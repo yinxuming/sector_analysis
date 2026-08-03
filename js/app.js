@@ -1781,15 +1781,27 @@
         // GitHub Pages 部署时 dataPath 为相对路径，今日数据若未被定时任务更新则 404 fallback 到 API
         try {
             if (isToday) {
-                // 今天：读取实时/一周数据文件
-                let filename;
                 if (indicator === '一周') {
-                    filename = `weekly_${sectorType}_${getTodayStr()}.json`;
+                    // 一周汇总：读取 weekly JSON
+                    const filename = `weekly_${sectorType}_${getTodayStr()}.json`;
+                    data = await fetchJSON(CONFIG.dataPath + filename);
+                    console.log(`实时数据来源(${sectorType}): dataPath JSON ${CONFIG.dataPath}`);
                 } else {
-                    filename = `realtime_${sectorType}_${indicator}.json`;
+                    // 今日：优先从 intraday JSON 提取（含 turnover_yi 成交额）
+                    // realtime JSON 不含成交额（AKShare 不返回 f6 字段），仅作 fallback
+                    const todayStr = getTodayStr();
+                    try {
+                        const intradayFilename = `intraday_${sectorType}_${todayStr}.json`;
+                        const intradayData = await fetchJSON(CONFIG.dataPath + intradayFilename);
+                        data = convertIntradayToRealtime(intradayData, todayStr);
+                        console.log(`实时数据来源(${sectorType}): dataPath 分时JSON (今日)`);
+                    } catch (intradayErr) {
+                        // intraday JSON 不存在（盘中未采集），fallback 到 realtime JSON
+                        const filename = `realtime_${sectorType}_${indicator}.json`;
+                        data = await fetchJSON(CONFIG.dataPath + filename);
+                        console.log(`实时数据来源(${sectorType}): dataPath JSON ${CONFIG.dataPath}`);
+                    }
                 }
-                data = await fetchJSON(CONFIG.dataPath + filename);
-                console.log(`实时数据来源(${sectorType}): dataPath JSON ${CONFIG.dataPath}`);
             } else {
                 // 历史日期：从分时数据文件提取最终值作为该日期的排名数据
                 const selectedDate = document.getElementById('intradayDate').value;
