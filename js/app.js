@@ -1740,6 +1740,7 @@
         const selectedDate = document.getElementById('intradayDate').value || new Date().toISOString().slice(0, 10);
         const today = new Date().toISOString().slice(0, 10);
         const isToday = selectedDate === today;
+        console.log(`[debug] loadRealtimeData: chartType=${chartType}, sectorType=${sectorType}, indicator=${indicator}, selectedDate=${selectedDate}, isToday=${isToday}`);
 
         // "全部"模式：分别获取行业和概念数据后合并
         if (sectorType === 'all') {
@@ -1747,9 +1748,11 @@
                 loadRealtimeDataSingle('industry', indicator, isToday),
                 loadRealtimeDataSingle('concept', indicator, isToday)
             ]);
+            console.log(`[debug] 全部模式: industry=${industryData ? '有数据' : 'null'}, concept=${conceptData ? '有数据' : 'null'}`);
             const data = mergeIndustryConceptData(industryData, conceptData);
             if (!data) throw new Error('行业和概念数据均不可用');
             const filteredData = filterDataBySectors(data);
+            console.log(`[debug] 全部模式 filteredData sectors[0] turnover_yi=${filteredData?.sectors?.[0]?.turnover_yi}`);
             renderChart(chartDom, filteredData, chartType);
             updateSummary(filteredData);
             return;
@@ -1757,6 +1760,7 @@
         const data = await loadRealtimeDataSingle(sectorType, indicator, isToday);
         if (!data) throw new Error('数据加载失败');
         const filteredData = filterDataBySectors(data);
+        console.log(`[debug] loadRealtimeData 返回 filteredData sectors[0] turnover_yi=${filteredData?.sectors?.[0]?.turnover_yi}, chartType=${chartType}`);
         renderChart(chartDom, filteredData, chartType);
         updateSummary(filteredData);
     }
@@ -1776,6 +1780,7 @@
      */
     async function loadRealtimeDataSingle(sectorType, indicator, isToday) {
         let data = null;
+        console.log(`[debug] loadRealtimeDataSingle 入口: sectorType=${sectorType}, indicator=${indicator}, isToday=${isToday}, dataPath=${CONFIG.dataPath}`);
 
         // dataPath JSON 优先：本地服务时读取 GitHub Pages 在线缓存，避免频繁请求东方财富API
         // GitHub Pages 部署时 dataPath 为相对路径，今日数据若未被定时任务更新则 404 fallback 到 API
@@ -1785,34 +1790,46 @@
                     // 一周汇总：读取 weekly JSON
                     const filename = `weekly_${sectorType}_${getTodayStr()}.json`;
                     data = await fetchJSON(CONFIG.dataPath + filename);
-                    console.log(`实时数据来源(${sectorType}): dataPath JSON ${CONFIG.dataPath}`);
+                    console.log(`[debug] 一周数据来源: ${CONFIG.dataPath + filename}, sectors=${data?.sectors?.length}`);
                 } else {
                     // 今日：优先从 intraday JSON 提取（含 turnover_yi 成交额）
-                    // realtime JSON 不含成交额（AKShare 不返回 f6 字段），仅作 fallback
                     const todayStr = getTodayStr();
+                    const intradayFilename = `intraday_${sectorType}_${todayStr}.json`;
+                    console.log(`[debug] 尝试加载intraday: ${CONFIG.dataPath + intradayFilename}`);
                     try {
-                        const intradayFilename = `intraday_${sectorType}_${todayStr}.json`;
                         const intradayData = await fetchJSON(CONFIG.dataPath + intradayFilename);
+                        console.log(`[debug] intraday加载成功, 有turnover_yi=${intradayData?.sectors?.[0]?.turnover_yi !== undefined}, sector_count=${intradayData?.sectors?.length}`);
                         data = convertIntradayToRealtime(intradayData, todayStr);
-                        console.log(`实时数据来源(${sectorType}): dataPath 分时JSON (今日)`);
+                        console.log(`[debug] 转换后sectors[0] turnover_yi=${data?.sectors?.[0]?.turnover_yi}, 数据源: intraday`);
                     } catch (intradayErr) {
-                        // intraday JSON 不存在（盘中未采集），fallback 到 realtime JSON
-                        const filename = `realtime_${sectorType}_${indicator}.json`;
-                        data = await fetchJSON(CONFIG.dataPath + filename);
-                        console.log(`实时数据来源(${sectorType}): dataPath JSON ${CONFIG.dataPath}`);
+                        console.log(`[debug] intraday加载失败: ${intradayErr.message}, 尝试检查localStorage缓存`);
+                        // 未在dataPath找到intraday JSON时，尝试从localStorage缓存读取（分时图API数据已缓存）
+                        const cached = loadIntradayCache(sectorType, todayStr);
+                        if (cached) {
+                            data = convertIntradayToRealtime(cached, todayStr);
+                            console.log(`[debug] 从缓存转换成功, sectors[0] turnover_yi=${data?.sectors?.[0]?.turnover_yi}, 数据源: 缓存`);
+                        } else {
+                            // 缓存也没有，fallback到realtime JSON（不含turnover_yi，但可用）
+                            console.log(`[debug] 缓存未命中, fallback到realtime JSON`);
+                            const filename = `realtime_${sectorType}_${indicator}.json`;
+                            data = await fetchJSON(CONFIG.dataPath + filename);
+                            console.log(`[debug] realtime加载成功, sectors[0] turnover_yi=${data?.sectors?.[0]?.turnover_yi}, sector_count=${data?.sectors?.length}`);
+                        }
                     }
                 }
             } else {
                 // 历史日期：从分时数据文件提取最终值作为该日期的排名数据
                 const selectedDate = document.getElementById('intradayDate').value;
                 const filename = `intraday_${sectorType}_${selectedDate}.json`;
+                console.log(`[debug] 历史日期加载intraday: ${CONFIG.dataPath + filename}`);
                 const intradayData = await fetchJSON(CONFIG.dataPath + filename);
+                console.log(`[debug] 历史intraday加载成功, turnover_yi=${intradayData?.sectors?.[0]?.turnover_yi !== undefined}`);
                 data = convertIntradayToRealtime(intradayData, selectedDate);
-                console.log(`实时数据来源(${sectorType}): dataPath 分时JSON (${selectedDate})`);
+                console.log(`[debug] 转换后sectors[0] turnover_yi=${data?.sectors?.[0]?.turnover_yi}`);
             }
         } catch (err) {
+            console.log(`[debug] 外层catch: isToday=${isToday}, indicator=${indicator}, err=${err.message}`);
             if (!isToday || indicator !== '今日') {
-                // 历史日期或非今日指标 dataPath JSON 必存在，失败直接返回null
                 console.warn(`dataPath 数据加载失败(${sectorType}):`, err.message);
                 return null;
             }
@@ -1821,17 +1838,19 @@
 
         // 今日+今日指标：dataPath JSON 不可用时 fallback 到东方财富API
         if (!data && isToday && indicator === '今日') {
+            console.log(`[debug] 尝试东方财富API fallback`);
             try {
                 const selectedNames = getFilterParam();
                 data = await EastMoneyAPI.buildRealtimeData(sectorType, selectedNames);
                 if (data) {
-                    console.log(`实时数据来源(${sectorType}): 东方财富API`);
+                    console.log(`[debug] 东方财富API成功, sectors[0] turnover_yi=${data?.sectors?.[0]?.turnover_yi}`);
                 }
             } catch (err) {
                 console.warn(`东方财富API获取${sectorType}实时数据失败:`, err);
                 return null;
             }
         }
+        console.log(`[debug] loadRealtimeDataSingle返回: data=${data ? '有数据' : 'null'}, sectors=${data?.sectors?.length}, turnover_yi_sample=${data?.sectors?.[0]?.turnover_yi}`);
         return data;
     }
 

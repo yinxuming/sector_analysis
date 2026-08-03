@@ -32,10 +32,10 @@ const CONFIG = {
     // 直连 push2.eastmoney.com 在部分网络环境下会被拦截，通过代理中转解决
     // 代理格式: 代理地址/proxy?target=encodeURIComponent(原始URL)
     // 设为 null 则直连东方财富API
-    apiProxy: 'https://1429314495-dxb6k8oy7q.ap-beijing.tencentscf.com',
+    apiProxy: 'https://vercel-proxy-p.vercel.app',
 
     // 备用代理（主代理失败时自动切换）
-    apiProxyBackup: 'https://vercel-proxy-p.vercel.app',
+    apiProxyBackup: 'https://cdgfbtemospbwxlyyxib.supabase.co/functions/v1/fund-proxy',
 
     // 数据刷新阈值（毫秒）：页面从不可见到可见时，超过此间隔自动刷新
     refreshThreshold: 5 * 60 * 1000,  // 5分钟

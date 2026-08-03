@@ -678,6 +678,7 @@ const ChartRender = {
          */
         function render() {
             // 排序数据
+            console.log(`[debug] renderTable render() 排序前sectors[0] turnover_yi=${sectors[0]?.turnover_yi}, sectors[1] turnover_yi=${sectors[1]?.turnover_yi}`);
             const sorted = [...sectors].sort((a, b) => {
                 let va = a[sortField];
                 let vb = b[sortField];
