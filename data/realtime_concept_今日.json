@@ -1,5 +1,5 @@
 {
-  "update_time": "2026-08-12 08:49:45",
+  "update_time": "2026-08-12 12:28:16",
   "indicator": "今日",
   "sector_type": "概念资金流",
   "sectors": [
@@ -5524,6 +5524,17 @@
       "main_net_inflow_pct": 0,
       "change_pct": 0.82,
       "turnover_yi": 10.92
+    },
+    {
+      "name": "历史新高 ",
+      "main_net_inflow_yi": 0.0,
+      "huge_net_inflow_yi": 0,
+      "big_net_inflow_yi": 0,
+      "medium_net_inflow_yi": 0,
+      "small_net_inflow_yi": 0,
+      "main_net_inflow_pct": 0,
+      "change_pct": 0.0,
+      "turnover_yi": 0.0
     },
     {
       "name": "B股",
