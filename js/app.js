@@ -107,11 +107,11 @@
                 document.getElementById('intradayDate').value = getTodayStr();
             }
         }
-        // 初始化自定义日期段默认值（默认最近7天，截止到今天）
+        // 初始化自定义日期段默认值（默认最近30天，截止到今天）
         const todayStr = getTodayStr();
-        const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+        const monthAgo = new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10);
         if (!document.getElementById('startDate').value) {
-            document.getElementById('startDate').value = weekAgo;
+            document.getElementById('startDate').value = monthAgo;
         }
         if (!document.getElementById('endDate').value) {
             document.getElementById('endDate').value = todayStr;
@@ -1334,22 +1334,16 @@
         }
 
         // 读取日期范围
-        // 默认开始日期：优先使用已缓存数据中最早日期（含本地localStorage和远程扫描结果），未获取到时回退到最近30天
+        // 默认日期区间：最近一个月（30天）
         let startDate = document.getElementById('startDate').value;
         let endDate = document.getElementById('endDate').value;
         const today = new Date().toISOString().slice(0, 10);
         if (!endDate) endDate = today;
         if (!startDate) {
-            const cachedStart = await getTrendStartDate(sectorType);
-            if (cachedStart) {
-                startDate = cachedStart;
-                console.log(`走势图默认开始日期（缓存数据最早日期）: ${startDate}`);
-            } else {
-                const d = new Date();
-                d.setDate(d.getDate() - 29);
-                startDate = d.toISOString().slice(0, 10);
-                console.log(`走势图默认开始日期（无缓存数据，回退30天）: ${startDate}`);
-            }
+            const d = new Date(endDate);
+            d.setDate(d.getDate() - 29);
+            startDate = d.toISOString().slice(0, 10);
+            console.log(`走势图默认开始日期（最近一个月）: ${startDate}`);
             document.getElementById('startDate').value = startDate;
             document.getElementById('endDate').value = endDate;
         }

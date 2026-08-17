@@ -829,16 +829,27 @@ const ChartRender = {
             }
 
             // 涨幅折线（右Y轴）
+            // 小圆点按红涨绿跌着色，折线保持板块色用于区分
             series.push({
                 name: `${name}-涨幅`,
                 type: 'line',
                 yAxisIndex: 1,
-                data: pctData,
+                data: pctData.map(v => ({
+                    value: v,
+                    itemStyle: { color: v !== null && v >= 0 ? '#f85149' : '#3fb950' }
+                })),
                 smooth: true,
                 symbol: 'circle',
                 symbolSize: 6,
                 lineStyle: { width: 2, color: color },
-                itemStyle: { color: color }
+                // 0% 参考线：灰色虚线加粗，明显区分涨幅正负
+                markLine: {
+                    silent: true,
+                    symbol: 'none',
+                    lineStyle: { color: '#8b949e', type: 'dashed', width: 1.5 },
+                    data: [{ yAxis: 0 }],
+                    label: { show: false }
+                }
             });
         });
 
