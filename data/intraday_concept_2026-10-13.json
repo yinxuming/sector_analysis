@@ -1,5 +1,5 @@
 {
-  "update_time": "2026-10-13 15:21:05",
+  "update_time": "2026-10-13 18:28:30",
   "date": "2026-10-13",
   "indicator": "今日",
   "sector_type": "概念资金流",
@@ -13887,5 +13887,6 @@
       "turnover_yi": 7280.16
     }
   ],
-  "source": "eastmoney"
+  "source": "eastmoney",
+  "retry_source": "eastmoney_retry"
 }
