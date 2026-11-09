@@ -1,5 +1,5 @@
 {
-  "update_time": "2026-11-09 17:44:57",
+  "update_time": "2026-11-09 21:37:56",
   "indicator": "10日",
   "sector_type": "行业资金流",
   "sectors": [
@@ -114,7 +114,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "航天装备Ⅱ",
+      "name": "航天装备Ⅲ",
       "main_net_inflow_yi": 11.99,
       "huge_net_inflow_yi": 10.39,
       "big_net_inflow_yi": 1.6,
@@ -125,7 +125,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "航天装备Ⅲ",
+      "name": "航天装备Ⅱ",
       "main_net_inflow_yi": 11.99,
       "huge_net_inflow_yi": 10.39,
       "big_net_inflow_yi": 1.6,
@@ -532,7 +532,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "非金属材料Ⅱ",
+      "name": "非金属材料Ⅲ",
       "main_net_inflow_yi": 2.38,
       "huge_net_inflow_yi": 2.27,
       "big_net_inflow_yi": 0.11,
@@ -543,7 +543,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "非金属材料Ⅲ",
+      "name": "非金属材料Ⅱ",
       "main_net_inflow_yi": 2.38,
       "huge_net_inflow_yi": 2.27,
       "big_net_inflow_yi": 0.11,
@@ -972,7 +972,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "农业综合Ⅱ",
+      "name": "农业综合Ⅲ",
       "main_net_inflow_yi": 0.04,
       "huge_net_inflow_yi": 0.02,
       "big_net_inflow_yi": 0.02,
@@ -983,7 +983,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "农业综合Ⅲ",
+      "name": "农业综合Ⅱ",
       "main_net_inflow_yi": 0.04,
       "huge_net_inflow_yi": 0.02,
       "big_net_inflow_yi": 0.02,
@@ -1291,7 +1291,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "轨交设备Ⅱ",
+      "name": "轨交设备Ⅲ",
       "main_net_inflow_yi": -0.29,
       "huge_net_inflow_yi": -3.97,
       "big_net_inflow_yi": 3.68,
@@ -1302,7 +1302,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "轨交设备Ⅲ",
+      "name": "轨交设备Ⅱ",
       "main_net_inflow_yi": -0.29,
       "huge_net_inflow_yi": -3.97,
       "big_net_inflow_yi": 3.68,
@@ -1434,7 +1434,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "贸易Ⅲ",
+      "name": "贸易Ⅱ",
       "main_net_inflow_yi": -0.39,
       "huge_net_inflow_yi": 2.42,
       "big_net_inflow_yi": -2.81,
@@ -1445,7 +1445,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "贸易Ⅱ",
+      "name": "贸易Ⅲ",
       "main_net_inflow_yi": -0.39,
       "huge_net_inflow_yi": 2.42,
       "big_net_inflow_yi": -2.81,
@@ -1599,7 +1599,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "其他家电Ⅱ",
+      "name": "其他家电Ⅲ",
       "main_net_inflow_yi": -0.66,
       "huge_net_inflow_yi": -0.56,
       "big_net_inflow_yi": -0.1,
@@ -1610,7 +1610,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "其他家电Ⅲ",
+      "name": "其他家电Ⅱ",
       "main_net_inflow_yi": -0.66,
       "huge_net_inflow_yi": -0.56,
       "big_net_inflow_yi": -0.1,
@@ -1643,7 +1643,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "旅游零售Ⅲ",
+      "name": "旅游零售Ⅱ",
       "main_net_inflow_yi": -0.85,
       "huge_net_inflow_yi": 1.04,
       "big_net_inflow_yi": -1.89,
@@ -1654,7 +1654,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "旅游零售Ⅱ",
+      "name": "旅游零售Ⅲ",
       "main_net_inflow_yi": -0.85,
       "huge_net_inflow_yi": 1.04,
       "big_net_inflow_yi": -1.89,
@@ -1731,7 +1731,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "白酒Ⅱ",
+      "name": "白酒Ⅲ",
       "main_net_inflow_yi": -1.0,
       "huge_net_inflow_yi": -8.84,
       "big_net_inflow_yi": 7.85,
@@ -1742,7 +1742,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "白酒Ⅲ",
+      "name": "白酒Ⅱ",
       "main_net_inflow_yi": -1.0,
       "huge_net_inflow_yi": -8.84,
       "big_net_inflow_yi": 7.85,
@@ -1764,7 +1764,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "焦炭Ⅲ",
+      "name": "焦炭Ⅱ",
       "main_net_inflow_yi": -1.05,
       "huge_net_inflow_yi": 0.95,
       "big_net_inflow_yi": -2.0,
@@ -1775,7 +1775,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "焦炭Ⅱ",
+      "name": "焦炭Ⅲ",
       "main_net_inflow_yi": -1.05,
       "huge_net_inflow_yi": 0.95,
       "big_net_inflow_yi": -2.0,
@@ -2105,7 +2105,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "环保设备Ⅱ",
+      "name": "环保设备Ⅲ",
       "main_net_inflow_yi": -1.62,
       "huge_net_inflow_yi": -0.42,
       "big_net_inflow_yi": -1.2,
@@ -2116,7 +2116,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "环保设备Ⅲ",
+      "name": "环保设备Ⅱ",
       "main_net_inflow_yi": -1.62,
       "huge_net_inflow_yi": -0.42,
       "big_net_inflow_yi": -1.2,
@@ -2446,17 +2446,6 @@
       "turnover_yi": 0
     },
     {
-      "name": "燃气Ⅱ",
-      "main_net_inflow_yi": -2.13,
-      "huge_net_inflow_yi": 0.14,
-      "big_net_inflow_yi": -2.27,
-      "medium_net_inflow_yi": -3.78,
-      "small_net_inflow_yi": 5.68,
-      "main_net_inflow_pct": -0.64,
-      "change_pct": 1.35,
-      "turnover_yi": 0
-    },
-    {
       "name": "燃气Ⅲ",
       "main_net_inflow_yi": -2.13,
       "huge_net_inflow_yi": 0.14,
@@ -2468,7 +2457,18 @@
       "turnover_yi": 0
     },
     {
-      "name": "特钢Ⅱ",
+      "name": "燃气Ⅱ",
+      "main_net_inflow_yi": -2.13,
+      "huge_net_inflow_yi": 0.14,
+      "big_net_inflow_yi": -2.27,
+      "medium_net_inflow_yi": -3.78,
+      "small_net_inflow_yi": 5.68,
+      "main_net_inflow_pct": -0.64,
+      "change_pct": 1.35,
+      "turnover_yi": 0
+    },
+    {
+      "name": "特钢Ⅲ",
       "main_net_inflow_yi": -2.15,
       "huge_net_inflow_yi": -0.39,
       "big_net_inflow_yi": -1.76,
@@ -2479,7 +2479,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "特钢Ⅲ",
+      "name": "特钢Ⅱ",
       "main_net_inflow_yi": -2.15,
       "huge_net_inflow_yi": -0.39,
       "big_net_inflow_yi": -1.76,
@@ -2567,7 +2567,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "家电零部件Ⅲ",
+      "name": "家电零部件Ⅱ",
       "main_net_inflow_yi": -2.21,
       "huge_net_inflow_yi": 1.61,
       "big_net_inflow_yi": -3.82,
@@ -2578,7 +2578,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "家电零部件Ⅱ",
+      "name": "家电零部件Ⅲ",
       "main_net_inflow_yi": -2.21,
       "huge_net_inflow_yi": 1.61,
       "big_net_inflow_yi": -3.82,
@@ -3216,7 +3216,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "照明设备Ⅲ",
+      "name": "照明设备Ⅱ",
       "main_net_inflow_yi": -4.02,
       "huge_net_inflow_yi": -1.8,
       "big_net_inflow_yi": -2.22,
@@ -3227,7 +3227,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "照明设备Ⅱ",
+      "name": "照明设备Ⅲ",
       "main_net_inflow_yi": -4.02,
       "huge_net_inflow_yi": -1.8,
       "big_net_inflow_yi": -2.22,
@@ -3469,7 +3469,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "综合Ⅱ",
+      "name": "综合Ⅲ",
       "main_net_inflow_yi": -4.97,
       "huge_net_inflow_yi": -1.62,
       "big_net_inflow_yi": -3.35,
@@ -3480,7 +3480,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "综合Ⅲ",
+      "name": "综合Ⅱ",
       "main_net_inflow_yi": -4.97,
       "huge_net_inflow_yi": -1.62,
       "big_net_inflow_yi": -3.35,
@@ -3843,7 +3843,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "工程咨询服务Ⅲ",
+      "name": "工程咨询服务Ⅱ",
       "main_net_inflow_yi": -7.56,
       "huge_net_inflow_yi": -2.43,
       "big_net_inflow_yi": -5.13,
@@ -3854,7 +3854,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "工程咨询服务Ⅱ",
+      "name": "工程咨询服务Ⅲ",
       "main_net_inflow_yi": -7.56,
       "huge_net_inflow_yi": -2.43,
       "big_net_inflow_yi": -5.13,
@@ -3986,7 +3986,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "地面兵装Ⅲ",
+      "name": "地面兵装Ⅱ",
       "main_net_inflow_yi": -8.39,
       "huge_net_inflow_yi": -4.34,
       "big_net_inflow_yi": -4.05,
@@ -3997,7 +3997,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "地面兵装Ⅱ",
+      "name": "地面兵装Ⅲ",
       "main_net_inflow_yi": -8.39,
       "huge_net_inflow_yi": -4.34,
       "big_net_inflow_yi": -4.05,
@@ -4063,17 +4063,6 @@
       "turnover_yi": 0
     },
     {
-      "name": "调味发酵品Ⅱ",
-      "main_net_inflow_yi": -9.0,
-      "huge_net_inflow_yi": -3.45,
-      "big_net_inflow_yi": -5.55,
-      "medium_net_inflow_yi": -5.07,
-      "small_net_inflow_yi": 13.99,
-      "main_net_inflow_pct": -2.52,
-      "change_pct": -0.34,
-      "turnover_yi": 0
-    },
-    {
       "name": "调味发酵品Ⅲ",
       "main_net_inflow_yi": -9.0,
       "huge_net_inflow_yi": -3.45,
@@ -4085,7 +4074,18 @@
       "turnover_yi": 0
     },
     {
-      "name": "油气开采Ⅲ",
+      "name": "调味发酵品Ⅱ",
+      "main_net_inflow_yi": -9.0,
+      "huge_net_inflow_yi": -3.45,
+      "big_net_inflow_yi": -5.55,
+      "medium_net_inflow_yi": -5.07,
+      "small_net_inflow_yi": 13.99,
+      "main_net_inflow_pct": -2.52,
+      "change_pct": -0.34,
+      "turnover_yi": 0
+    },
+    {
+      "name": "油气开采Ⅱ",
       "main_net_inflow_yi": -9.03,
       "huge_net_inflow_yi": -5.97,
       "big_net_inflow_yi": -3.06,
@@ -4096,7 +4096,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "油气开采Ⅱ",
+      "name": "油气开采Ⅲ",
       "main_net_inflow_yi": -9.03,
       "huge_net_inflow_yi": -5.97,
       "big_net_inflow_yi": -3.06,
@@ -4184,7 +4184,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "航海装备Ⅱ",
+      "name": "航海装备Ⅲ",
       "main_net_inflow_yi": -9.96,
       "huge_net_inflow_yi": -4.99,
       "big_net_inflow_yi": -4.97,
@@ -4195,7 +4195,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "航海装备Ⅲ",
+      "name": "航海装备Ⅱ",
       "main_net_inflow_yi": -9.96,
       "huge_net_inflow_yi": -4.99,
       "big_net_inflow_yi": -4.97,
@@ -4569,7 +4569,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "中药Ⅱ",
+      "name": "中药Ⅲ",
       "main_net_inflow_yi": -15.4,
       "huge_net_inflow_yi": -2.44,
       "big_net_inflow_yi": -12.96,
@@ -4580,7 +4580,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "中药Ⅲ",
+      "name": "中药Ⅱ",
       "main_net_inflow_yi": -15.4,
       "huge_net_inflow_yi": -2.44,
       "big_net_inflow_yi": -12.96,
@@ -4635,7 +4635,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "军工电子Ⅱ",
+      "name": "军工电子Ⅲ",
       "main_net_inflow_yi": -16.59,
       "huge_net_inflow_yi": 3.22,
       "big_net_inflow_yi": -19.81,
@@ -4646,7 +4646,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "军工电子Ⅲ",
+      "name": "军工电子Ⅱ",
       "main_net_inflow_yi": -16.59,
       "huge_net_inflow_yi": 3.22,
       "big_net_inflow_yi": -19.81,
@@ -4811,7 +4811,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "其他电子Ⅱ",
+      "name": "其他电子Ⅲ",
       "main_net_inflow_yi": -20.52,
       "huge_net_inflow_yi": 0.09,
       "big_net_inflow_yi": -20.61,
@@ -4822,7 +4822,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "其他电子Ⅲ",
+      "name": "其他电子Ⅱ",
       "main_net_inflow_yi": -20.52,
       "huge_net_inflow_yi": 0.09,
       "big_net_inflow_yi": -20.61,
@@ -5185,7 +5185,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "航空装备Ⅲ",
+      "name": "航空装备Ⅱ",
       "main_net_inflow_yi": -48.44,
       "huge_net_inflow_yi": -18.12,
       "big_net_inflow_yi": -30.32,
@@ -5196,7 +5196,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "航空装备Ⅱ",
+      "name": "航空装备Ⅲ",
       "main_net_inflow_yi": -48.44,
       "huge_net_inflow_yi": -18.12,
       "big_net_inflow_yi": -30.32,
@@ -5295,7 +5295,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "证券Ⅱ",
+      "name": "证券Ⅲ",
       "main_net_inflow_yi": -74.48,
       "huge_net_inflow_yi": -18.86,
       "big_net_inflow_yi": -55.62,
@@ -5306,7 +5306,7 @@
       "turnover_yi": 0
     },
     {
-      "name": "证券Ⅲ",
+      "name": "证券Ⅱ",
       "main_net_inflow_yi": -74.48,
       "huge_net_inflow_yi": -18.86,
       "big_net_inflow_yi": -55.62,
